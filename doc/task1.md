@@ -20,20 +20,20 @@
 3. 数据请求1: from xx get xx
     1. 请求说明
     2. 查询参数
-        ```
-            expr: xxxx
-            count: xxxx
-            attributes: xxxx
-        ```
+    ```
+        expr: xxxx
+        count: xxxx
+        attributes: xxxx
+    ```
     3. 数据处理方式: (如，提取xx字段，做为结果，并如何)
     4. 其它
 
 4. 数据请求2: xxxx
 5. 请求数量计算，cost预估。
-    ```
+```
     total request: xxx
     total time: xxx (assume the cost per request is "unit")
-    ```
+```
 
 #### 请求图
 ![图](stage.png)
