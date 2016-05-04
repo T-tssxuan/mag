@@ -1,4 +1,8 @@
-#### `Id->RId->AA.AuId->Id`
+## 目录
+* [Id->RId->J.JId->Id](#Id->RId->J.JId->Id)
+
+
+#### Id->RId->AA.AuId->Id
 
 1. 阶段分析：由论文的RId发出请求，并且最后一个Id也是已知的，可以分别找出RId与Id的AA.AuId，由他们的共同AA.AuId, 生成2-hop和3-hop结果
 
@@ -31,7 +35,7 @@
     cpu cost operation: 0
 ```
 
-#### `Id->RId->J.JId->Id`
+#### Id->RId->J.JId->Id
 
 1. 阶段分析: 由论文的Rid已知，而且最后的Id是已知的，可以分别查找RId与Id的J.JId, 通过他们的共同J.JId, 生成3-hop结果
 
@@ -64,7 +68,7 @@
     cpu cost operation: 0
 ```
 
-#### `Id->RId->C.CId->Id`
+#### Id->RId->C.CId->Id
 
 1. 阶段分析：由论文的RId已知，而且最后的Id是已知的，可以分别查找RId和Id的C.CId, 并且通过他们的共同C.CId生成3-hop结果
 
@@ -97,7 +101,7 @@
     cpu cost operation: 0
 ```
 
-#### `Id->RId->F.FId->Id`
+#### Id->RId->F.FId->Id
 
 1. 阶段分析: 由于论文的RId已知，而且最后的Id是已知的，可以分别查找RId和Id的F.FId，通过他们的共同F.FId生成3-hop结果
 
@@ -129,7 +133,7 @@
     cpu cost operation: 0
 ```
 
-#### `Id->RId1->RId2->AA.AuId`
+#### Id->RId1->RId2->AA.AuId
 1. 阶段分析：由于论文的RI已知，而且最后的AA.AuId已知，可以分别查找RId1的RId2，以及AA.AuId的论文Id，找同两个集合中相同的论文Id，并且构造2-hop, 3-hop结果。
 
 2. 数据请求1:
@@ -161,7 +165,7 @@
     cpu cost operation: 0
 ```
 
-#### `Id->RId1->RId2->RId3`
+#### Id->RId1->RId2->RId3
 1. 阶段分析：由于论文的引用是单向的，所以要取得所有的引用关系，只能通过单向的一级级推进取得结果集。
 
 2. 数据请求1:
