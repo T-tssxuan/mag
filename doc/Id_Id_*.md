@@ -1,10 +1,10 @@
 ## 目录
-* [Id->RId->AA.AuId->Id](#Id-RId-AAAuId-Id)
-* [Id->RId->J.JId->Id](#Id-RId-JJId-Id)
-* [Id->RId->C.CId->Id](#Id-RId-CCId-Id)
-* [Id->RId->F.FId->Id](#Id-RId-FFId-Id)
-* [Id->RId1->RId2->AA.AuId](#Id-RId1-RId2-AAAuId)
-* [Id->RId1->RId2->RId3](#Id-RId1-RId2-RId3)
+* [Id->RId->AA.AuId->Id](#id-rid-aaauid-id)
+* [Id->RId->J.JId->Id](#id-rid-jjid-id)
+* [Id->RId->C.CId->Id](#id-rid-ccid-id)
+* [Id->RId->F.FId->Id](#id-rid-ffid-id)
+* [Id->RId1->RId2->AA.AuId](#id-rid1-rid2-aaauid)
+* [Id->RId1->RId2->RId3](#id-rid1-rid2-rid3)
 
 #### Id->RId->AA.AuId->Id
 
@@ -200,4 +200,3 @@
     totol time: 求取RId2并行请求时间，以及其后验证请求时间
     cpu cost operation: 0
 ```
-## aa
