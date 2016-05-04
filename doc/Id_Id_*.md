@@ -62,7 +62,7 @@
     total request: 2 * Rid count
     total time: 1, 请求可并行
     cpu cost operation: 0
-``
+```
 
 #### `Id->RId->C.CId->Id`
 
