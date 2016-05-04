@@ -4,3 +4,4 @@
 
 ## 算法分析
 1. [Id->Id->*](Id_Id_*.md)
+2. [Id->AA.AuId->*](Id_AA.AuId_*.md)
