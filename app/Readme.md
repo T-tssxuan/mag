@@ -1,3 +1,8 @@
+### 总述
+1. node 依赖模块没有上传到git，请push后在app目录下运行: `npm install`
+2. 程序运行方式，在app目录下运行：`node app.js`
+3. 测试：http://localhost:3000?id1=xxx&id2=xxx
+
 ### 文件说明
 1. app.js 应用主程序
 2. models/delay-checker.js 负责检测本地到服务器的请求时延。
