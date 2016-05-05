@@ -88,6 +88,7 @@ Handler.prototype.getRequestDetail = function() {
             testCount++;
             if (testCount == 4 && validCount != 2) {
                 // the pair is not valid, need to send empty result
+                that.res.send([]);
             }
         });
     }

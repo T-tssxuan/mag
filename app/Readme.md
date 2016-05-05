@@ -2,6 +2,7 @@
 1. node 依赖模块没有上传到git，请push后在app目录下运行: `npm install`
 2. 程序运行方式，在app目录下运行：`node app.js`
 3. 测试：http://localhost:3000?id1=xxx&id2=xxx
+4. 代码风格,主要根据: https://github.com/airbnb/javascript
 
 ### 文件说明
 1. app.js 应用主程序
