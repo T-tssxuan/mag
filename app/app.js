@@ -13,15 +13,15 @@ var app = express();
 delayChecker.start();
 
 app.get('/', function (req, res) {
-    console.log('id1: ' + req.query.id1);
-    console.log('id2: ' + req.query.id2);
+    log.info('new requet id1: ' + req.query.id1 + ' id2: ' + req.query.id2);
     var beginTime = Date.now();
     var preResSend = res.send;
     res.send = function(data) {
         res.send = preResSend;
+        var elapse = Date.now() - beginTime;
+        var data = 'finished in: ' + elapse + 'ms result: ' + data;
         res.send(data);
-        var elaps = Date.now() - beginTime;
-        log.info('request finished in ' + elaps + 'ms');
+        log.info('request finished in ' + elapse + 'ms');
     }
     var h = new Handler(delayChecker.getDelay(),
                         req.query.id1,
