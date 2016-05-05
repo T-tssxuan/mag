@@ -10,7 +10,9 @@
   "license": "ISC",
   "dependencies": {
       "express": "*",
-      "request": "*"
+      "request": "*",
+      "log4js": "*",
+      "async": "*"
   },
   "devDependencies": {
   }
