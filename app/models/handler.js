@@ -65,32 +65,38 @@ Handler.prototype.getRequestDetail = function() {
         var url = magUrlMake(expr);
 
         tadaRequest(url, that.reqInfo, function(err, data) {
-            if (validCount < 2) {
-                if (!err) {
-                    // If there is data in this request
-                    if (data.length != 0) {
-                        that.reqDetail.value[pos - 1] = id;
-                        validCount++;
-                        that.reqDetail.desc[pos - 1] = field;
-
-                        // If finished check tow parameters start search
-                        if (validCount == 2) {
-                            log.debug('the search is started');
-                            log.debug('request detail: ' 
-                                      + JSON.stringify(that.reqDetail));
-                            that.startSearch();
-                        }
-                    }
-                } else {
-                    log.info('getRequestDetail: get the error data' + data);
+            log.debug('getRequestDetail: ' + JSON.stringify(data));
+            if (!err) {
+                // If there is data in this request and has not been set as
+                // AA.AuId, we set it.
+                // priority of AA.AuId higher than priority of Id
+                if (data.length != 0 
+                    && that.reqDetail.desc[pos - 1] != 'AA.AuId') {
+                    that.reqDetail.value[pos - 1] = id;
+                    validCount++;
+                    that.reqDetail.desc[pos - 1] = field;
                 }
+            } else {
+                log.info('getRequestDetail: get the error data' + data);
             }
             testCount++;
-            if (testCount == 4 && validCount != 2) {
-                // the pair is not valid, need to send empty result
-                that.res.send([]);
+            
+            // At most 4 result
+            if (testCount == 4) {
+                // check whether get an validate pair
+                if (that.reqDetail.desc[0] != '' 
+                    && that.reqDetail.desc[1] != '') {
+                    log.info('the search is started');
+                    log.debug('request detail: '
+                              + JSON.stringify(that.reqDetail));
+                    that.startSearch();
+                } else {
+                    // the pair is not valid, need to send empty result
+                    log.info('not find valid query pair');
+                    that.res.send('[]');
+                }
             }
-        });
+        }, 10);
     }
 
     // Test the idx and field
@@ -151,6 +157,7 @@ Handler.prototype.beginAAAuId = function(data) {
     }
 
     // Get all paper Id that the AA.AuId published
+    data = data[0];
     var ids = [];
     for (var i = 0; i < data.length; i++) {
         ids.push(data[i]['Id']);
@@ -221,34 +228,48 @@ Handler.prototype.beginId = function(data) {
     data = data[0];
     async.parallel([
         function(callback) {
-            log.info('in the Rid');
+            if (!data['RId']) {
+                return callback(null);
+            }
             processor(data['RId'], 'RId', callback);
         },
         function(callback) {
+            if (!data['AA']) {
+                return callback(null);
+            }
             var elements = [];
-            for (var j = 0; j < data['AA']; j++) {
-                elements.push(data['AA']['AuId']);
+            for (var j = 0; j < data['AA'].length; j++) {
+                elements.push(data['AA'][j]['AuId']);
             }
             processor(elements, 'AA.AuId', callback);
         },
         function(callback) {
+            if (!data['F']) {
+                return callback(null);
+            }
             var elements = [];
-            for (var j = 0; j < data['F']; j++) {
-                elements.push(data['F']['FId']);
+            for (var j = 0; j < data['F'].length; j++) {
+                elements.push(data['F'][j]['FId']);
             }
             processor(elements, 'F.FId', callback);
         },
         function(callback) {
+            if (!data['C']) {
+                return callback(null);
+            }
             var elements = [];
-            for (var j = 0; j < data['C']; j++) {
-                elements.push(data['C']['CId']);
+            for (var j = 0; j < data['C'].length; j++) {
+                elements.push(data['C'][j]['CId']);
             }
             processor(elements, 'C.CId', callback);
         },
         function(callback) {
+            if (!data['J']) {
+                return callback(null);
+            }
             var elements = [];
-            for (var j = 0; j < data['J']; j++) {
-                elements.push(data['J']['JId']);
+            for (var j = 0; j < data['J'].length; j++) {
+                elements.push(data['J'][j]['JId']);
             }
             processor(elements, 'J.JId', callback);
         }

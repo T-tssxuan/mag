@@ -34,12 +34,13 @@ var tadaRequest = function (url, info, callback, maxTry) {
         } else {
             // if failed retry
             info.timeoutCount++;
-            if (info.flag && tryTime > 0) {
-                tadaRequest(url, info, callback, tryTime - 1);
+            if (info.flag && tryTime > 1) {
+                tadaRequest(url, info, callback, --tryTime);
                 log.debug('failed retry: ' + 
                           tryTime + ' url: ' + url);
             } else {
                 log.debug('failed no retry ' + ' url: ' + url);
+                callback('failed', data);
             }
         }
 
