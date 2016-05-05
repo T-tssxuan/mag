@@ -61,14 +61,15 @@ function (url, info, callback, maxTry)
 ```
 
 #### models/handler.js
-主要负责的功能有：
 1. 请求数据分析，判断是[Id, AA.AuId], [Id, Id], [Id, AA.AuId], [AA.AuId, AA.AuId]中的哪一个
 2. 系统数据初始化.
 3. 取得hop-1请求结果，并且根据结果发出后续path搜索命令
 4. 结果返回
 
 ```
-
+reqDetail解析:
+    desc: Array 描述请求参数数据类型
+    value: Array 描述请求参数值
 ```
 
 #### models/handler/Id.js
