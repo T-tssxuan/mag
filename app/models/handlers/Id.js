@@ -50,10 +50,11 @@ function searchPath(reqInfo, reqDetail, result, basePath, cbFunc) {
  * @param {Function} cbFunc the callback function
  */
 module.exports = function(reqInfo, reqDetail, result, basePath, cbFunc) {
+    return cbFunc();
     // Before search path check whether this module suitable for query pair
     if (adatper[reqDetail.desc[0]].indexOf(reqDetail.desc[1]) == -1) {
         cbFunc();
     } else {
-        searchPath(reqInfo, reqDetail, result, basePath, cbFunc);
+        // searchPath(reqInfo, reqDetail, result, basePath, cbFunc);
     }
 }
