@@ -171,6 +171,9 @@ Handler.prototype.AAAuIdHop1 = function() {
 Handler.prototype.beginAAAuId = function(data) {
     var that = this;
 
+    // Get all paper Id that the AA.AuId published
+    data = data[0];
+
     // Parallel process each path
     async.parallel([
         function(callback) {
@@ -190,8 +193,9 @@ Handler.prototype.beginAAAuId = function(data) {
             var afids = [];
             for (var i = 0; i < data.length; i++) {
                 for (var j = 0; j < data[i]['AA'].length; j++) {
-                    if (data[i]['AA'][j]['AuId'] == that.id1) {
-                        afids.push(data[i]['AA'][j]['AfId']);
+                    if (data[i]['AA'][j]
+                        && data[j][i]['AA']['AuId'] == that.id1) {
+                        afids.push(data[i][j]['AA']['AfId']);
                         break;
                     }
                 }

@@ -29,7 +29,7 @@ var tadaRequest = function (url, info, callback, maxTry) {
                 err = e;
             }
             log.debug('url: ' + url)
-            // console.log(JSON.stringify(data));
+            console.log(JSON.stringify(data));
             callback(err, data);
         } else {
             // if failed retry
