@@ -46,7 +46,32 @@ function searchPath(reqInfo, reqDetail, result, basePath, cbFunc) {
         },
         function(callback) {
             // AA.AfId->AA.AuId->Id
-            callback(null);    
+            if(reqDetail.desc[1]=="Id")
+            {
+                async.each(basePath, function(item, next){
+                    var expr = "And(Composite(AA.AfId="+item+"),Id="+reqDetail.value[1]+")";
+                    var attributes = "AA.AuId,AA.AfId";
+                    var count = 50;
+
+                    //make url
+                    var url = magUrlMake(expr, attributes, count);
+
+                    //send request
+                    if(url != null){
+                        handle_3_hop_result(url, reqInfo, item, result, reqDetail, next);
+                    }
+                    else{
+                        error="AA.AfId->AA.AuId->Id get URL error: url is null!";
+                        next(null);//do not send error
+                    }
+                },
+                function(err){
+                    callback(err);
+                });
+            }
+            else{
+                callback(null);
+            }//if not, exit immediately  
         }
     ], function(err) {
         cbFunc(err);
@@ -122,14 +147,7 @@ function handle_3_hop_result(url, reqInfo, basePath_i, result, reqDetail, callba
     tadaRequest(url, reqInfo, function(err, data) {
         if(data != null)
         {
-            for(var i=0; i < data.length;i++){
-                var resultId = data[i].Id; 
-                var path = [reqDetail.value[0], basePath_i, resultId, reqDetail.value[1]];
-
-                log.debug("found 3-hop(Id->C.CId->Id->"+reqDetail.desc[1]+") result:"+path);
-                //add to result set
-                result.push(path);
-            }
+            
         }   
         callback(null);
     });
