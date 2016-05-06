@@ -5,6 +5,16 @@ var tadaRequest = require('./tada-request');
 
 var log = log4js.getLogger('handler');
 
+// sub handlers
+var subHandlers = {
+    'AA.AuId': require('./handlers/AA.AuId'),
+    'C.CId': require('./handlers/C.CId'),
+    'F.FId': require('./handlers/F.FId'),
+    'Id': require('./handlers/Id'),
+    'J.JId': require('./handlers/J.JId'),
+    'AA.AfId': require('./handlers/AA.AfId')
+}
+
 /**
  * Handler constructor
  *
@@ -117,6 +127,16 @@ Handler.prototype.startSearch = function() {
     }
 }
 
+Handler.prototype.processSubPath = function(field, elements, callback) {
+    subHandlers[field](
+        this.reqInfo,
+        this.reqDetail,
+        this.result,
+        elements,
+        callback
+    );
+}
+
 
 /**
  * Start the hop-1 search with the path begin with AA.AuId
@@ -143,39 +163,30 @@ Handler.prototype.AAAuIdHop1 = function() {
 Handler.prototype.beginAAAuId = function(data) {
     var that = this;
 
-    // Parallel process each element in the data[field]
-    var processor = function(elements, field, callback) {
-        async.each(elements, function(item, next) {
-            if (field == 'Id' && item == that.reqDetail.value[1]) {
-                that.result.push([that.reqDetail.value[0], item]);
-            }
-            // add id->field to the 1 hop resutl
-            // call the id->field->*
-        }, function(err) {
-            callback();
-        });
-    }
-
     // Get all paper Id that the AA.AuId published
     data = data[0];
-    var ids = [];
-    for (var i = 0; i < data.length; i++) {
-        ids.push(data[i]['Id']);
-    }
 
-    // Get all field Id that the AA.AuId researched
-    var afids = [];
-    for (var i = 0; i < data.length; i++) {
-        afids.push(data[i]['AfId']);
-    }
-
-    // Parallel process each
+    // Parallel process each path
     async.parallel([
         function(callback) {
-            processor(ids, 'Id', callback);
+            var ids = [];
+            for (var i = 0; i < data.length; i++) {
+                ids.push(data[i]['Id']);
+
+                // If the Id fullfil the query pair, push it into the result
+                if (data[i]['Id'] == that.reqDetail.value[1]) {
+                    that.result.push([that.reqDetail.value[0], data[i]['Id']]);
+                }
+            }
+            that.processSubPath('Id', ids, callback);
         },
         function(callback) {
-            processor(afids, 'AA.AfId', callback);
+            // Get all field Id that the AA.AuId researched
+            var afids = [];
+            for (var i = 0; i < data.length; i++) {
+                afids.push(data[i]['AfId']);
+            }
+            that.processSubPath('AA.AfId', afids, callback);
         },
     ], function (err) {
         that.res.send(JSON.stringify(that.result));
@@ -187,8 +198,10 @@ Handler.prototype.beginAAAuId = function(data) {
  */
 Handler.prototype.IdHop1 = function(callback) {
     var that = this;
-    var url = magUrlMake('Id=' + this.reqDetail.value[0], 
-                         'RId,F.FId,C.CId,AA.AuId,J.JId');
+    var url = magUrlMake(
+        'Id=' + this.reqDetail.value[0], 
+        'RId,F.FId,C.CId,AA.AuId,J.JId'
+    );
 
     // Get the hop-1 result and generate the rest hops
     tadaRequest(url, this.reqInfo, function(err, data) {
@@ -208,21 +221,6 @@ Handler.prototype.IdHop1 = function(callback) {
 Handler.prototype.beginId = function(data) {
     var that = this;
 
-    // Parallel process each element in the data[field]
-    var processor = function(elements, field, callback) {
-        async.each(elements, function(item, next) {
-            if ((field == 'RId' && that.reqDetail.value[1] == item)
-                || (field == 'AA.AuId' && that.reqDetail.value[1] == item)) {
-                that.result.push([that.reqDetail.value[0], item]);
-            }
-            // add id->field to the 1 hop resutl
-            // call the id->field->*
-            next();
-        }, function(err) {
-            callback(null);
-        });
-    }
-
     // parallel process each data item of the result and extract correspond
     // field to search the rest hops
     data = data[0];
@@ -231,47 +229,71 @@ Handler.prototype.beginId = function(data) {
             if (!data['RId']) {
                 return callback(null);
             }
-            processor(data['RId'], 'RId', callback);
+
+            var rids = [];
+            for (var i = 0; i < data['RId'].length; i++) {
+                rids.push(data['RId'][i]);
+
+                // check if there is the 1-hop result
+                if (data['RId'][i] == that.id2) {
+                    that.result.push([that.id1, that.id2]);
+                }
+            }
+
+            that.processSubPath('RId', rids, callback);
         },
         function(callback) {
             if (!data['AA']) {
                 return callback(null);
             }
-            var elements = [];
+
+            var auids = [];
             for (var j = 0; j < data['AA'].length; j++) {
-                elements.push(data['AA'][j]['AuId']);
+                auids.push(data['AA'][j]['AuId']);
+
+                // check if there is the 1-hop result
+                if (data['AA'][j]['AuId'] == that.id2) {
+                    that.result.push([that.id1, that.id2]);
+                }
             }
-            processor(elements, 'AA.AuId', callback);
+
+            that.processSubPath('AA.AuId', auids, callback);
         },
         function(callback) {
             if (!data['F']) {
                 return callback(null);
             }
-            var elements = [];
+
+            var fids = [];
             for (var j = 0; j < data['F'].length; j++) {
-                elements.push(data['F'][j]['FId']);
+                fids.push(data['F'][j]['FId']);
             }
-            processor(elements, 'F.FId', callback);
+
+            that.processSubPath('F.FId', elements, fids);
         },
         function(callback) {
             if (!data['C']) {
                 return callback(null);
             }
-            var elements = [];
+
+            var cids = [];
             for (var j = 0; j < data['C'].length; j++) {
-                elements.push(data['C'][j]['CId']);
+                cids.push(data['C'][j]['CId']);
             }
-            processor(elements, 'C.CId', callback);
+
+            that.processSubPath('C.CId', cids, callback);
         },
         function(callback) {
             if (!data['J']) {
                 return callback(null);
             }
-            var elements = [];
+
+            var jids = [];
             for (var j = 0; j < data['J'].length; j++) {
-                elements.push(data['J'][j]['JId']);
+                jids.push(data['J'][j]['JId']);
             }
-            processor(elements, 'J.JId', callback);
+
+            that.processSubPath('J.JId', jids, callback);
         }
     ], function (err, result) {
         log.info('finished');
