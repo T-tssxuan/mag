@@ -22,7 +22,7 @@ var adatper = {
 function searchPath(reqInfo, reqDetail, result, basePath, cbFunc) {
     async.parallel([
         function(callback){
-            //F.FId->Id
+            //C.CId->Id
             if(reqDetail.desc[1]=="Id")
             {
                 //request param
@@ -34,12 +34,23 @@ function searchPath(reqInfo, reqDetail, result, basePath, cbFunc) {
                 //send request
                 if(url != null){
                     tadaRequest(url, reqInfo, function(err, data) {
-                        data[0]
+                        var resultC = data[0].C;
+                        if(resultC != null)
+                        {
+                            var resultCid = resultC.CId;
+
+                            if(basePath[0] == resultCid){
+                                //2-hop result
+                                var path = [reqDetail.value[0], resultCid, reqDetail.value[1]];
+                                log.debug("found 2-hop(Id->C.CId->Id) result:"+path);
+                                result.push(path);
+                            }
+                        }
                         callback(null);
                     });
                 }
                 else{
-                    error="F.FId->Id get URL error: url is null!";
+                    error="C.CId->Id get URL error: url is null!";
                     callback(null);//not callback error
                 }
             }

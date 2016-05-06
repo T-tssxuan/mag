@@ -149,7 +149,7 @@ function handle_2_hop_result(url, reqInfo, basePath, result, reqDetail, callback
                 if(FidsStringArray[i] in hashTable){
                     //2-hop result
                     var path = [reqDetail.value[0], FidsStringArray[i], reqDetail.value[1]];
-                    log.debug("found 2-hop(Id->F.FId->Id) result:"+path);
+                    //log.debug("found 2-hop(Id->F.FId->Id) result:"+path);
                     //add to result set
                     result.push(path);
                 }
@@ -171,7 +171,7 @@ function handle_3_hop_result(url, reqInfo, basePath_i, result, reqDetail, callba
                 var resultId = data[i].Id; 
                 var path = [reqDetail.value[0], basePath_i, resultId, reqDetail.value[1]];
 
-                log.debug("found 3-hop(Id->F.FId->Id->"+reqDetail.desc[1]+") result:"+path);
+                //log.debug("found 3-hop(Id->F.FId->Id->"+reqDetail.desc[1]+") result:"+path);
                 //log.debug(JSON.stringify(result));
                 //add to result set
                 result.push(path);
