@@ -33,7 +33,7 @@ function Handler(defaultDelay, id1, id2, res) {
     // request info about the timeout of this handle
     // Note: this object need to pass to tadaRequest every time when do request
     this.reqInfo = {
-        recievedCount: 0,
+        receivedCount: 0,
         timeoutCount: 0,
         timeout: defaultDelay * 2,
         flag: true,
@@ -150,11 +150,12 @@ Handler.prototype.processSubPath = function(field, elements, callback) {
  */
 Handler.prototype.AAAuIdHop1 = function() {
     var that = this;
-    var url = magUrlMake('AA.AuId=' + this.reqDetail.value[0], 'Id,AA,AfId');
+    var expr = 'Composite(AA.AuId=' + this.reqDetail.value[0] + ')';
+    var url = magUrlMake(expr, 'Id,AA.AuId,AA.AfId');
 
     // Get the hop-1 result and generate the rest hops
     tadaRequest(url, this.reqInfo, function(err, data) {
-        if (!err) {
+        if (!err && data.length > 0) {
             that.beginAAAuId(data);
         } else {
             that.sendResult();
@@ -191,9 +192,18 @@ Handler.prototype.beginAAAuId = function(data) {
             // Get all field Id that the AA.AuId researched
             var afids = [];
             for (var i = 0; i < data.length; i++) {
-                afids.push(data[i]['AfId']);
+                for (var j = 0; j < data[i].length; j++) {
+                    if (data[i]['AA']['AuId'] == this.id1) {
+                        afids.push(data[i]['AA']['AfId']);
+                        break;
+                    }
+                }
             }
-            that.processSubPath('AA.AfId', afids, callback);
+            if (afids.length > 0) {
+                that.processSubPath('AA.AfId', afids, callback);
+            } else {
+                callback(null);
+            }
         },
     ], function (err) {
         that.sendResult();
@@ -212,7 +222,7 @@ Handler.prototype.IdHop1 = function(callback) {
 
     // Get the hop-1 result and generate the rest hops
     tadaRequest(url, this.reqInfo, function(err, data) {
-        if (!err) {
+        if (!err && data.length > 0) {
             that.beginId(data);
         } else {
             that.sendResult();

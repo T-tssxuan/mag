@@ -14,12 +14,12 @@ var log = log4js.getLogger('tadaRequest');
  */
 var tadaRequest = function (url, info, callback, maxTry) {
     var tryTime = maxTry || 4;
-
+    log.warn('info: ' + JSON.stringify(info));
     request.get(url, {timeout: info.timeout}, function (error, response, body) {
         if (!error && response.statusCode == 200) {
             log.info(response.statusCode + '');
             // if successed parse the data and invoke the callback function
-            info.recievedCount++;
+            info.receivedCount++;
             var err = null;
             var data;
             try {
@@ -29,7 +29,7 @@ var tadaRequest = function (url, info, callback, maxTry) {
                 err = e;
             }
             log.debug('url: ' + url)
-            console.log(JSON.stringify(data));
+            // console.log(JSON.stringify(data));
             callback(err, data);
         } else {
             // if failed retry
@@ -39,21 +39,22 @@ var tadaRequest = function (url, info, callback, maxTry) {
                 log.debug('failed retry: ' + 
                           tryTime + ' url: ' + url);
             } else {
-                log.debug('failed no retry ' + ' url: ' + url);
+                log.error('failed no retry ' + ' url: ' + url);
                 callback('failed', data);
             }
         }
 
         // Calculate the timeout according to recently statistic
         var sum = info.receivedCount + info.timeoutCount;
+        log.warn("sum: " + sum);
         if (sum > 15) {
             if (info.receivedCount / sum <= 0.2) {
-                info.recievedCount = 0;
+                info.receivedCount = 0;
                 info.timeoutCount = 0;
                 info.timeout -= info.timeout / 20;
                 info.timeout = info.timeout > 200? info.timeout : 200;
             } else if (info.timeoutCount / sum >= 0.8) {
-                info.recievedCount = 0;
+                info.receivedCount = 0;
                 info.timeoutCount = 0;
                 info.timeout += info.timeout / 20;
             }
