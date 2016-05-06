@@ -5,20 +5,17 @@ var tadaRequest = require('./tada-request');
 
 var log = log4js.getLogger('handler');
 
-function placeholder(a, b, c, d, e) {
-    e();
-}
-
 // sub handlers
 // TODO change to the 'Id' like style when you export you module
 var subHandlers = {
-    'AA.AuId': placeholder,
-    'C.CId': placeholder,
-    'F.FId': placeholder,
+    'placeholder': function(a, b, c, d, e) { e(); },
+    'AA-AuId': this.placeholder,
+    'c-cid': this.placeholder,
+    'F-FId': this.placeholder,
     'Id': require('./handlers/Id'),
     'RId': require('./handlers/Id'),
-    'J.JId': placeholder,
-    'AA.AfId': placeholder
+    'J-JId': this.placeholder,
+    'AA-AfId': this.placeholder
 }
 
 /**
@@ -135,6 +132,7 @@ Handler.prototype.startSearch = function() {
 
 Handler.prototype.processSubPath = function(field, elements, callback) {
     log.debug('field: ' + field + ' elements: ' + JSON.stringify(elements));
+    field = field.replace('.', '-');
     subHandlers[field](
         this.reqInfo,
         this.reqDetail,
@@ -276,7 +274,7 @@ Handler.prototype.beginId = function(data) {
                 fids.push(data['F'][j]['FId']);
             }
 
-            that.processSubPath('F.FId', fids, callback);
+            that.processSubPath('F.FId', elements, fids);
         },
         function(callback) {
             if (!data['C']) {
