@@ -34,7 +34,7 @@ function searchPath(reqInfo, reqDetail, result, basePath, cbFunc) {
                 //send request
                 if(url != null){
                     tadaRequest(url, reqInfo, function(err, data) {
-                        
+                        data[0]
                         callback(null);
                     });
                 }
