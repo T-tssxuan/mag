@@ -11,6 +11,225 @@ var adatper = {
     'AA.AuId': ['AA.AuId', 'Id']
 }
 
+function searchTowAndCompare(url1, url2, reqInfo, callback) {
+    async.parallel([
+        function (finish) {
+            tadaRequest(url1, reqInfo, function(err, data) {
+                finish(err, data);
+            });
+        },
+        function (finish) {
+            tadaRequest(url2, reqInfo, function(err, data) {
+                finish(err, data);
+            });
+        }
+    ], function(err, result) {
+        callback(err, result);
+    });
+}
+
+/*
+ * search Path Id->RId->AA.AuId or Id->RId->AA.AuId->Id
+ *
+ * @param {Object} reqInfo
+ * @param {Object} reqDetail
+ * @param {Array} result
+ * @param {Number} Id
+ * @param {Function} callback
+ */
+function searchPath1(reqInfo, reqDetail, result, Id, callback) {
+    log.debug('Search Path: Id->AA.AuId->Id');
+    var expr = '';
+    var Id1 = reqDetail.value[0];
+    var Id2 = reqDetail.value[1];
+    if (reqDetail.desc[1] == 'AA.AuId') {
+        // search Id->RId->AA.AuId
+        expr = 'And(Id=' + Id + ',';
+        expr += 'Composite(AA.AuId=' + Id2 + '))';
+        tadaRequest(magUrlMake(expr), reqInfo, function(err, data) {
+            if (!err && data.length != 0) {
+                log.debug('Id->AA.AuId data length: ' + data.length);
+                result.push([Id1, Id, Id2]);
+                log.debug('Id->RId->AA.AuId: [' + Id1 + ',' + Id + ',' + Id2 
+                          + ']');
+            }
+            callback(null);
+        });
+    } else {
+        // search Id->RId->AA.AuId->Id
+        var url1 = magUrlMake('Id=' + Id, 'AA.AuId', 1);
+        var url2 = magUrlMake('Id=' + Id2, 'AA.AuId', 1);
+        searchTowAndCompare(url1, url2, reqInfo, function(err, result) {
+            if (err || result[0].length == 0 || result[1].length == 0) {
+                return callback(null);
+            }
+            if (!result[0]['AA'] || !result[1]['AA']) {
+                return callback(null);
+            }
+            var tmp = {};
+            var arr1 = result[0]['AA'];
+            var arr2 = result[1]['AA'];
+            for (var i = 0; i < arr1.length; i++) {
+                tmp[arr1[i]['AuId']] = 1;
+            }
+            for (var i = 0; i < arr2.length; i++) {
+                if (tmp[arr2[i]['AuId']]) {
+                    result.push([Id1, Id, arr2[i]['AuId'], Id2]);
+                    log.debug('Id->RId->AA.AuId->Id: [' + Id1 + ', ' + Id 
+                              + ', ' + arr2[i]['AuId'] + ', ' + Id2 + ']');
+                }
+            }
+            callback(null);
+        });
+    }
+}
+
+/*
+ * search Path Id->RId->J.JId->Id
+ *
+ * @param {Object} reqInfo
+ * @param {Object} reqDetail
+ * @param {Array} result
+ * @param {Number} Id
+ * @param {Function} callback
+ */
+function searchPath2(reqInfo, reqDetail, result, Id, callback) {
+    var Id1 = reqDetail.value[0];
+    var Id2 = reqDetail.value[1];
+    var url1 = magUrlMake('Id=' + Id, 'J.JId', 1);
+    var url2 = magUrlMake('Id=' + Id2, 'J.JId', 1);
+    searchTowAndCompare(url1, url1, reqInfo, function(err, result) {
+        if (err || result[0].length == 0 || result[1].length == 0) {
+            return callback(null);
+        }
+        if (!result[0]['J'] || !result[1]['J']) {
+            return callback(null);
+        }
+        if (result[0]['J']['JId'] == result[1]['J']['JId']) {
+            result.push([Id1, Id, result[0]['J']['JId'], Id2]);
+        }
+        callback(null);
+    });
+}
+
+/*
+ * search Path Id->RId->C.CId->Id
+ *
+ * @param {Object} reqInfo
+ * @param {Object} reqDetail
+ * @param {Array} result
+ * @param {Number} Id
+ * @param {Function} callback
+ */
+function searchPath3(reqInfo, reqDetail, result, Id, callback) {
+    var Id1 = reqDetail.value[0];
+    var Id2 = reqDetail.value[1];
+    var url1 = magUrlMake('Id=' + Id, 'C.CId', 1);
+    var url2 = magUrlMake('Id=' + Id2, 'C.CId', 1);
+    searchTowAndCompare(url1, url1, reqInfo, function(err, result) {
+        if (err || result[0].length == 0 || result[1].length == 0) {
+            return callback(null);
+        }
+        if (!result[0]['C'] || !result[1]['C']) {
+            return callback(null);
+        }
+        if (result[0]['C']['CId'] == result[1]['C']['CId']) {
+            result.push([Id1, Id, result[0]['C']['CId'], Id2]);
+        }
+        callback(null);
+    });
+}
+
+/*
+ * search Path Id->RId->F.FId->Id
+ *
+ * @param {Object} reqInfo
+ * @param {Object} reqDetail
+ * @param {Array} result
+ * @param {Number} Id
+ * @param {Function} callback
+ */
+function searchPath4(reqInfo, reqDetail, result, Id, callback) {
+    var Id1 = reqDetail.value[0];
+    var Id2 = reqDetail.value[1];
+    var url1 = magUrlMake('Id=' + Id, 'F.FId', 1);
+    var url2 = magUrlMake('Id=' + Id2, 'F.FId', 1);
+    searchTowAndCompare(url1, url1, reqInfo, function(err, result) {
+        if (err || result[0].length == 0 || result[1].length == 0) {
+            return callback(null);
+        }
+        if (!result[0]['F'] || !result[1]['F']) {
+            return callback(null);
+        }
+        var tmp = {};
+        var arr1 = result[0]['F'];
+        var arr2 = result[1]['F'];
+        for (var i = 0; i < arr1.length; i++) {
+            tmp[arr1[i]['FId']] = 1;
+        }
+        for (var i = 0; i < arr2.length; i++) {
+            if (tmp[arr2[i]['FId']]) {
+                result.push([Id1, Id, arr2[i]['FId'], Id2]);
+                log.debug('Id->RId->F.FId->Id: [' + Id1 + ', ' + Id 
+                          + ', ' + arr2[i]['FId'] + ', ' + Id2 + ']');
+            }
+        }
+        callback(null);
+    });
+}
+
+/*
+ * search Path Id->RId->RId or Id->RId->RId->AuId
+ *
+ * @param {Object} reqInfo
+ * @param {Object} reqDetail
+ * @param {Array} result
+ * @param {Number} Id
+ * @param {Function} callback
+ */
+function searchPath5(reqInfo, reqDetail, result, Id, callback) {
+    log.debug('Search Path: Id->RId->RId->*');
+    var expr = '';
+    var Id1 = reqDetail.value[0];
+    var Id2 = reqDetail.value[1];
+    if (reqDetail.desc[1] == 'Id') {
+        // search Id->RId->RId
+        expr = 'And(Id=' + Id + ',';
+        expr += 'RId=' + Id2 + ')';
+        tadaRequest(magUrlMake(expr), reqInfo, function(err, data) {
+            if (!err && data.length != 0 ) {
+                log.debug('Id->RId->RId data length: ' + data.length);
+                result.push([Id1, Id, Id2]);
+                log.debug('Id->RId->RId: [' + Id1 + ',' + Id + ',' + Id2 
+                          + ']');
+            }
+            callback(null);
+        });
+    } else {
+        // search Id->RId->AA.AuId->Id
+        var url = magUrlMake('RId=' + Id, 'RId', 1);
+        tadaRequest(url, reqInfo, function(err, data) {
+            if (!err && data.length != 0 && data['RId']) {
+                // get validate next hop
+                async.each(data, function(item, finish) {
+                    var tmpExpr = 'And(Id=' + item + ',';
+                    Expr += 'RId=' + Id2 + ')';
+                    tadaRequest(magUrlMake(tmpExpr), function(err, data) {
+                        if (!err && data.length != 0) {
+                            result.push([Id1, Id, item, Id2]);
+                        }
+                        callback(null);
+                    });
+                }, function() {
+                    callback(null);
+                });
+                // 
+            } else {
+                callback(null);
+            }
+        });
+    }
+}
 /**
  * Search the path with given basePath
  *
@@ -22,19 +241,43 @@ var adatper = {
 function searchPath(reqInfo, reqDetail, result, basePath, cbFunc) {
     async.parallel([
         function(callback) {
-            // Id->AA.AuId->Id
+            async.each(basePath, function(item, finish) {
+                searchPath1(reqInfo, reqDetail, result, item, finish);
+            }, function(err) {
+                callback(err);
+            });
         },
         function(callback) {
-            // Id->J.JId->Id
+            // Id->RId->J.JId->Id
+            async.each(basePath, function(item, finish) {
+                searchPath2(reqInfo, reqDetail, result, item, finish);
+            }, function(err) {
+                callback(err);
+            });
         },
         function(callback) {
-            // Id->C.CId->Id
+            // Id->RId->C.CId->Id
+            async.each(basePath, function(item, finish) {
+                searchPath3(reqInfo, reqDetail, result, item, finish);
+            }, function(err) {
+                callback(err);
+            });
         },
         function(callback) {
-            // Id->F.FId->Id
+            // Id->RId->F.FId->Id
+            async.each(basePath, function(item, finish) {
+                searchPath4(reqInfo, reqDetail, result, item, finish);
+            }, function(err) {
+                callback(err);
+            });
         },
         function(callback) {
-            // Id->AA.AuId->(AA.AuId, Id)
+            // Id->RId->AA.AuId->(AA.AuId, Id)
+            async.each(basePath, function(item, finish) {
+                searchPath5(reqInfo, reqDetail, result, item, finish);
+            }, function(err) {
+                callback(err);
+            });
         }
     ], function(err) {
         cbFunc(err);
@@ -50,11 +293,11 @@ function searchPath(reqInfo, reqDetail, result, basePath, cbFunc) {
  * @param {Function} cbFunc the callback function
  */
 module.exports = function(reqInfo, reqDetail, result, basePath, cbFunc) {
-    return cbFunc();
+    // return cbFunc();
     // Before search path check whether this module suitable for query pair
     if (adatper[reqDetail.desc[0]].indexOf(reqDetail.desc[1]) == -1) {
         cbFunc();
     } else {
-        // searchPath(reqInfo, reqDetail, result, basePath, cbFunc);
+        searchPath(reqInfo, reqDetail, result, basePath, cbFunc);
     }
 }
