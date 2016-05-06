@@ -283,10 +283,7 @@ Handler.prototype.beginId = function(data) {
                 return callback(null);
             }
 
-            var cids = [];
-            for (var j = 0; j < data['C'].length; j++) {
-                cids.push(data['C'][j]['CId']);
-            }
+            var cids = [data['C']['CId']];
 
             that.processSubPath('C.CId', cids, callback);
         },
@@ -295,10 +292,7 @@ Handler.prototype.beginId = function(data) {
                 return callback(null);
             }
 
-            var jids = [];
-            for (var j = 0; j < data['J'].length; j++) {
-                jids.push(data['J'][j]['JId']);
-            }
+            var jids = [data['J']['JId']];
 
             that.processSubPath('J.JId', jids, callback);
         }
