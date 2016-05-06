@@ -29,17 +29,18 @@ var tadaRequest = function (url, info, callback, maxTry) {
                 err = e;
             }
             log.debug('url: ' + url)
-            console.log(JSON.stringify(data));
+            // console.log(JSON.stringify(data));
             callback(err, data);
         } else {
             // if failed retry
+            log.debug('timeout: ' + info.timeout);
             info.timeoutCount++;
             if (info.flag && tryTime > 1) {
                 tadaRequest(url, info, callback, --tryTime);
                 log.debug('failed retry: ' + 
                           tryTime + ' url: ' + url);
             } else {
-                log.debug('failed no retry ' + ' url: ' + url);
+                log.error('failed no retry ' + ' url: ' + url);
                 callback('failed', data);
             }
         }
