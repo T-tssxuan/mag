@@ -33,21 +33,8 @@ function searchPath(reqInfo, reqDetail, result, basePath, cbFunc) {
                 var url = magUrlMake(expr, attributes, count);
                 //send request
                 if(url != null){
-                    tadaRequest(url, reqInfo, function(err, data) {
-                        var resultC = data[0].C;
-                        if(resultC != null)
-                        {
-                            var resultCid = resultC.CId;
-
-                            if(basePath[0] == resultCid){
-                                //2-hop result
-                                var path = [reqDetail.value[0], resultCid, reqDetail.value[1]];
-                                log.debug("found 2-hop(Id->C.CId->Id) result:"+path);
-                                result.push(path);
-                            }
-                        }
-                        callback(null);
-                    });
+                    handle_2_hop_result(url, reqInfo, basePath, result, reqDetail, callback);
+                    
                 }
                 else{
                     error="C.CId->Id get URL error: url is null!";
@@ -127,6 +114,37 @@ module.exports = function(reqInfo, reqDetail, result, basePath, cbFunc) {
 }
 
 /**
+ * get 2-hop result by response data and basePath
+ *
+ * @param {Object} url request url
+ * @param {Object} response data
+ * @param {Object} basePath F.FId from last hop
+ * @param {Array} final result set
+ * @param {Object} reqDetail the infomation about the query pair
+ * @param {Function} callback
+ */
+function handle_2_hop_result(url, reqInfo, basePath, result, reqDetail, callback) {
+    tadaRequest(url, reqInfo, function(err, data) {
+        if(data != null)
+        {
+            var resultC = data[0].C;
+            if(resultC != null)
+            {
+                var resultCid = resultC.CId;
+
+                if(basePath[0] == resultCid){
+                    //2-hop result
+                    var path = [reqDetail.value[0], resultCid, reqDetail.value[1]];
+                    //log.debug("found 2-hop(Id->C.CId->Id) result:"+path);
+                    result.push(path);
+                }
+            }
+        }
+        callback(null);
+    });
+}
+
+/**
  * get 3-hop result by response data and basePath
  *
  * @param {Object} url request url
@@ -145,7 +163,7 @@ function handle_3_hop_result(url, reqInfo, basePath_i, result, reqDetail, callba
                 var resultId = data[i].Id; 
                 var path = [reqDetail.value[0], basePath_i, resultId, reqDetail.value[1]];
 
-                log.debug("found 3-hop(Id->C.CId->Id->"+reqDetail.desc[1]+") result:"+path);
+                //log.debug("found 3-hop(Id->C.CId->Id->"+reqDetail.desc[1]+") result:"+path);
                 //add to result set
                 result.push(path);
             }

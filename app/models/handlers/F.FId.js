@@ -132,31 +132,33 @@ module.exports = function(reqInfo, reqDetail, result, basePath, cbFunc) {
  */
 function handle_2_hop_result(url, reqInfo, basePath, result, reqDetail, callback) {
     tadaRequest(url, reqInfo, function(err, data) {
-        var FidsArray = data[0].F;//this array only has one element, get its "F" array
-        var FidsStringArray = [];//resultId's F.FId
+        if(data != null){
+            var FidsArray = data[0].F;//this array only has one element, get its "F" array
+            var FidsStringArray = [];//resultId's F.FId
 
-        if(FidsArray != null)
-        {
-            for(var i=0;i<FidsArray.length;i++){
-                FidsStringArray[i]=FidsArray[i].FId;
-            }
-            
-            /*find intersection of startFid and endFid*/
-            var hashTable = {};
-            for(var i = 0; i<basePath.length;i++){
-                hashTable[basePath[i]] = 1;
-            }
-            for(var i = 0;i<FidsStringArray.length;i++){
-                if(FidsStringArray[i] in hashTable){
-                    //2-hop result
-                    var path = [reqDetail.value[0], FidsStringArray[i], reqDetail.value[1]];
-                    //log.debug("found 2-hop(Id->F.FId->Id) result:"+path);
-                    //add to result set
-                    result.push(path);
+            if(FidsArray != null)
+            {
+                for(var i=0;i<FidsArray.length;i++){
+                    FidsStringArray[i]=FidsArray[i].FId;
                 }
-                hashTable[FidsStringArray[i]] = 1;
-            }
-        }        
+                
+                /*find intersection of startFid and endFid*/
+                var hashTable = {};
+                for(var i = 0; i<basePath.length;i++){
+                    hashTable[basePath[i]] = 1;
+                }
+                for(var i = 0;i<FidsStringArray.length;i++){
+                    if(FidsStringArray[i] in hashTable){
+                        //2-hop result
+                        var path = [reqDetail.value[0], FidsStringArray[i], reqDetail.value[1]];
+                        //log.debug("found 2-hop(Id->F.FId->Id) result:"+path);
+                        //add to result set
+                        result.push(path);
+                    }
+                    hashTable[FidsStringArray[i]] = 1;
+                }
+            }       
+        }
         callback(null);
     });
 }
