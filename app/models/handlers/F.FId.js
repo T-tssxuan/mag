@@ -48,7 +48,13 @@ function searchPath(reqInfo, reqDetail, result, basePath, cbFunc) {
         function(callback) {
             // F.FId->Id->AA.AuId
 
-            callback(null);
+            var error = null;
+            if(reqDetail.desc[1]=="AA.AuId"){
+                
+            }
+
+
+            callback(error);
         },
         function(callback) {
             // F.FId->Id->Id
@@ -89,7 +95,7 @@ module.exports = function(reqInfo, reqDetail, result, basePath, cbFunc) {
 function handle_2_hop_result(err, data, basePath, result, reqDetail) {
     var FidsArray = data[0].F;//this array only has one element, get its "F" array
     var FidsStringArray = new Array();//resultId's F.FId
-    
+
     for(var i=0;i<FidsArray.length;i++){
         FidsStringArray[i]=FidsArray[i].FId;
     }
