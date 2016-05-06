@@ -26,7 +26,7 @@ function searchPath(reqInfo, reqDetail, result, basePath, cbFunc) {
             if(reqDetail.desc[1]=="AA.AuId")
             {
                 //request param
-                var expr = "AA.AuId="+reqDetail.value[1];
+                var expr = "Composite(AA.AuId="+reqDetail.value[1]+")";
                 var attributes = "AA.AuId,AA.AfId";
                 var count = 100;
                 //make url
@@ -72,8 +72,41 @@ module.exports = function(reqInfo, reqDetail, result, basePath, cbFunc) {
 
 
 function handle_2_hop_result(url, reqInfo, basePath, result, reqDetail, callback){
-    
+    tadaRequest(url, reqInfo, function(err, data) {
+        if(data != null){
+            //find all Afid of the target author
+            var resultAfid = [];
+            for(var i = 0; i < data.length;i++){
+                for(var j = 0; j < data[i].AA.length;j++)
+                {
+                    var AAArray = data[i].AA;
+                    if(AAArray[j].AuId == reqDetail.value[1] && AAArray[j].AfId != null)
+                    {
+                        //found an Afid of the target author
+                        resultAfid.push(AAArray[j].AfId);
+                    }
+                }
+            }
+
+            //get the intersection of source author and target author
+            var hashTable = {};
+            for(var i = 0;i < basePath.length;i++){
+                hashTable[basePath[i]] = 1;
+            }
+            for(var i = 0;i < resultAfid.length;i++){
+                if(resultAfid[i] in hashTable){
+                    //found 2-hop result
+                    var path = [reqDetail.value[0], resultAfid[i], reqDetail.value[1]];
+                    log.debug("found 2-hop(AA.AuId->AA.AfId->AA.AuId) result:"+path);
+                    result.push(path);
+                }
+            }
+
+        }
+        callback(null);
+    });
 }
+
 /**
  * get 3-hop result by response data and basePath
  *
