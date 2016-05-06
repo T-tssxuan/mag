@@ -109,7 +109,7 @@ Handler.prototype.getRequestDetail = function() {
                 } else {
                     // the pair is not valid, need to send empty result
                     log.info('not find valid query pair');
-                    that.res.send('[]');
+                    that.sendResult();
                 }
             }
         }, 10);
@@ -157,7 +157,7 @@ Handler.prototype.AAAuIdHop1 = function() {
         if (!err) {
             that.beginAAAuId(data);
         } else {
-            that.res.send('[]');
+            that.sendResult();
         }
     });
 }
@@ -196,7 +196,7 @@ Handler.prototype.beginAAAuId = function(data) {
             that.processSubPath('AA.AfId', afids, callback);
         },
     ], function (err) {
-        that.res.send(JSON.stringify(that.result));
+        that.sendResult();
     });
 }
 
@@ -215,7 +215,7 @@ Handler.prototype.IdHop1 = function(callback) {
         if (!err) {
             that.beginId(data);
         } else {
-            that.res.send('[]');
+            that.sendResult();
         }
     });
 }
@@ -297,9 +297,15 @@ Handler.prototype.beginId = function(data) {
             that.processSubPath('J.JId', jids, callback);
         }
     ], function (err, result) {
-        log.info('finished');
-        that.res.send(JSON.stringify(that.result));
+        that.sendResult();
     });
+}
+
+Handler.prototype.sendResult = function() {
+    log.info('finished');
+    var re = "size: " + this.result.length + " ---->";
+    re += JSON.stringify(this.result);
+    this.res.send(re);
 }
 
 /**
