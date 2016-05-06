@@ -13,7 +13,7 @@ function placeholder(a, b, c, d, e) {
 // TODO change to the 'Id' like style when you export you module
 var subHandlers = {
     'AA.AuId': require('./handlers/AA.AuId'),
-    'C.CId': placeholder,
+    'C.CId': require('./handlers/C.CId'),
     'F.FId': require('./handlers/F.FId'),
     'Id': require('./handlers/Id'),
     'RId': require('./handlers/Id'),

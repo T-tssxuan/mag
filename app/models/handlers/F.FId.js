@@ -123,11 +123,12 @@ module.exports = function(reqInfo, reqDetail, result, basePath, cbFunc) {
 /**
  * get 2-hop result by response data and basePath
  *
- * @param {Object} err infomation
+ * @param {Object} url request url
  * @param {Object} response data
- * @param {Array} basePath the base path of the request
+ * @param {Object} basePath F.FId from last hop
  * @param {Array} final result set
  * @param {Object} reqDetail the infomation about the query pair
+ * @param {Function} callback
  */
 function handle_2_hop_result(url, reqInfo, basePath, result, reqDetail, callback) {
     tadaRequest(url, reqInfo, function(err, data) {
@@ -158,10 +159,18 @@ function handle_2_hop_result(url, reqInfo, basePath, result, reqDetail, callback
         }        
         callback(null);
     });
-
-    
 }
 
+/**
+ * get 3-hop result by response data and basePath
+ *
+ * @param {Object} url request url
+ * @param {Object} response data
+ * @param {Object} basePath_i ith F.FId from last hop
+ * @param {Array} final result set
+ * @param {Object} reqDetail the infomation about the query pair
+ * @param {Function} callback
+ */
 function handle_3_hop_result(url, reqInfo, basePath_i, result, reqDetail, callback){
     
     tadaRequest(url, reqInfo, function(err, data) {
@@ -176,9 +185,8 @@ function handle_3_hop_result(url, reqInfo, basePath_i, result, reqDetail, callba
                 //add to result set
                 result.push(path);
             }
-            callback(null);
         }
-
+        callback(null);
     });
     
 }
