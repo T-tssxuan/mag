@@ -48,7 +48,7 @@ var tadaRequest = function (url, info, callback, maxTry) {
         var sum = info.receivedCount + info.timeoutCount;
         log.warn("sum: " + sum);
         if (sum > 15) {
-            if (info.receivedCount / sum <= 0.2) {
+            if (info.timeoutCount / sum <= 0.2) {
                 info.receivedCount = 0;
                 info.timeoutCount = 0;
                 info.timeout -= info.timeout / 20;
@@ -57,6 +57,7 @@ var tadaRequest = function (url, info, callback, maxTry) {
                 info.receivedCount = 0;
                 info.timeoutCount = 0;
                 info.timeout += info.timeout / 20;
+                info.timeout = info.timeout < 5000? info.timeout : 5000;
             }
         }
     });

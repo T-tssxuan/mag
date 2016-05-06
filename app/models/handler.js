@@ -30,6 +30,8 @@ var subHandlers = {
  * @param {Object} res
  */
 function Handler(defaultDelay, id1, id2, res) {
+    defaultDelay = defaultDelay > 200? defaultDelay : 200;
+    defaultDelay = defaultDelay < 5000? defaultDelay : 5000;
     // request info about the timeout of this handle
     // Note: this object need to pass to tadaRequest every time when do request
     this.reqInfo = {
