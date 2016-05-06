@@ -20,8 +20,34 @@ var adatper = {
  * @param {Function} cbFunc the callback function
  */
 
-function handle_2_hop_result(err, data, result) {
+function handle_2_hop_result(err, data, basePath, result) {
+    var FidsArray = data[0].F;//this array only has one element, get its "F" array
+    var FidsStringArray = new Array();
+    for(var i=0;i<FidsArray.length;i++){
+        FidsStringArray[i]=FidsArray[i].FId;
+    }
 
+    var hashTable = new Object();//find intersection of startFid and endFid
+    for(var i = 0; i<startFid.length;i++){
+        console.log(startFid[i]);
+        hash_add(startFid[i], 1);
+    }
+    for(var i = 0;i<endFid.length;i++){
+        console.log(endFid[i]);
+        hash_add(endFid[i], 1);
+    }
+
+}
+
+function hash_add(key, value){
+    if(key in hashTable){
+         //2-hop result
+        var path = {startId, key, endId};
+        two_hop_result[count_2_hop_result] = path;
+        count_2_hop_result++;
+        console.log("found result");
+    }
+    hashTable[key] = value;
 }
 
 
@@ -42,7 +68,7 @@ function searchPath(reqInfo, reqDetail, result, basePath, cbFunc) {
                 //send request
                 if(url != null){
                     tadaRequest(url, reqInfo, function(err, data) {
-                        handle_2_hop_result(err, data, result);
+                        handle_2_hop_result(err, data, basePath, result);
                     });
                 }
                 else{
