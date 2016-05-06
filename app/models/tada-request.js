@@ -14,12 +14,12 @@ var log = log4js.getLogger('tadaRequest');
  */
 var tadaRequest = function (url, info, callback, maxTry) {
     var tryTime = maxTry || 4;
-
+    log.warn('info: ' + JSON.stringify(info));
     request.get(url, {timeout: info.timeout}, function (error, response, body) {
         if (!error && response.statusCode == 200) {
             log.info(response.statusCode + '');
             // if successed parse the data and invoke the callback function
-            info.recievedCount++;
+            info.receivedCount++;
             var err = null;
             var data;
             try {
@@ -33,7 +33,6 @@ var tadaRequest = function (url, info, callback, maxTry) {
             callback(err, data);
         } else {
             // if failed retry
-            log.debug('timeout: ' + info.timeout);
             info.timeoutCount++;
             if (info.flag && tryTime > 1) {
                 tadaRequest(url, info, callback, --tryTime);
@@ -47,14 +46,15 @@ var tadaRequest = function (url, info, callback, maxTry) {
 
         // Calculate the timeout according to recently statistic
         var sum = info.receivedCount + info.timeoutCount;
+        log.warn("sum: " + sum);
         if (sum > 15) {
             if (info.receivedCount / sum <= 0.2) {
-                info.recievedCount = 0;
+                info.receivedCount = 0;
                 info.timeoutCount = 0;
                 info.timeout -= info.timeout / 20;
                 info.timeout = info.timeout > 200? info.timeout : 200;
             } else if (info.timeoutCount / sum >= 0.8) {
-                info.recievedCount = 0;
+                info.receivedCount = 0;
                 info.timeoutCount = 0;
                 info.timeout += info.timeout / 20;
             }

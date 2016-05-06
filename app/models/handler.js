@@ -33,7 +33,7 @@ function Handler(defaultDelay, id1, id2, res) {
     // request info about the timeout of this handle
     // Note: this object need to pass to tadaRequest every time when do request
     this.reqInfo = {
-        recievedCount: 0,
+        receivedCount: 0,
         timeoutCount: 0,
         timeout: defaultDelay * 2,
         flag: true,
@@ -192,9 +192,18 @@ Handler.prototype.beginAAAuId = function(data) {
             // Get all field Id that the AA.AuId researched
             var afids = [];
             for (var i = 0; i < data.length; i++) {
-                afids.push(data[i]['AA']);
+                for (var j = 0; j < data[i].length; j++) {
+                    if (data[i]['AA']['AuId'] == this.id1) {
+                        afids.push(data[i]['AA']['AfId']);
+                        break;
+                    }
+                }
             }
-            that.processSubPath('AA.AfId', afids, callback);
+            if (afids.length > 0) {
+                that.processSubPath('AA.AfId', afids, callback);
+            } else {
+                callback(null);
+            }
         },
     ], function (err) {
         that.sendResult();
