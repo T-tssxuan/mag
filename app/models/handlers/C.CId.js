@@ -11,7 +11,7 @@ var adatper = {
     'AA.AuId': []
 }
 
-/**
+/** 
  * Search the path with given basePath
  *
  * @param {Object} reqInfo the infomation about the request
@@ -59,58 +59,50 @@ function searchPath(reqInfo, reqDetail, result, basePath, cbFunc) {
             }//if not, exit immediately
         },
         function(callback) {
-            // F.FId->Id->AA.AuId
-            if(reqDetail.desc[1]=="AA.AuId"){
-                async.each(basePath, function(item, finish) {
-                    var expr = "And(Composite(F.FId="+ item +"),Composite(AA.AuId="+reqDetail.value[1]+"))";
-                    var attributes = "Id";
-                    var count = 100;
-
-                    //make url
-                    var url = magUrlMake(expr, attributes, count);
-
-                    //send request
-                    if(url != null){
-                        handle_3_hop_result(url, reqInfo, item, result, reqDetail, finish);
-                    }
-                    else{
-                        error="F.FId->Id->AA.AuId get URL error: url is null!";
-                        finish(null);//do not send error
-                    }
-                }, 
-                function(err) {
-                    callback(err)
-                });
-            } else {
+            // C.CId->Id->AA.AuId
+            if(reqDetail.desc[1]=="AA.AuId")
+            {
+                //request param
+                var expr = "And(Composite(C.CId="+basePath[0]+"),Composite(AA.AuId="+reqDetail.value[1]+"))";
+                var attributes = "Id";
+                var count = 100;
+                //make url
+                var url = magUrlMake(expr, attributes, count);
+                //send request
+                if(url != null){
+                    handle_3_hop_result(url, reqInfo, basePath[0], result, reqDetail, callback);
+                }
+                else{
+                    error="C.CId->Id->AA.AuId get URL error: url is null!";
+                    callback(null);//not callback error
+                }
+            }
+            else{
                 callback(null);
-            }            
+            }      
         },
         function(callback) {
-            // F.FId->Id->Id
-            if(reqDetail.desc[1]=="Id"){
-                async.each(basePath, function(item, finish) {
-                    var expr = "And(Composite(F.FId="+ item +"),RId="+reqDetail.value[1]+")";
-                    var attributes = "Id";
-                    var count = 10000;
-
-                    //make url
-                    var url = magUrlMake(expr, attributes, count);
-
-                    //send request
-                    if(url != null){
-                        handle_3_hop_result(url, reqInfo, item, result, reqDetail, finish);
-                    }
-                    else{
-                        error="F.FId->Id->Id get URL error: url is null!";
-                        finish(null);//do not send error
-                    }
-                }, 
-                function(err) {
-                    callback(err)
-                });
-            } else {
+            // C.CId->Id->Id
+            if(reqDetail.desc[1]=="Id")
+            {
+                //request param
+                var expr = "And(Composite(C.CId="+basePath[0]+"),RId="+reqDetail.value[1]+")";
+                var attributes = "Id";
+                var count = 1000;
+                //make url
+                var url = magUrlMake(expr, attributes, count);
+                //send request
+                if(url != null){
+                    handle_3_hop_result(url, reqInfo, basePath[0], result, reqDetail, callback);
+                }
+                else{
+                    error="C.CId->Id->Id get URL error: url is null!";
+                    callback(null);//not callback error
+                }
+            }
+            else{
                 callback(null);
-            } 
+            }
         }
     ], function(err) {
         cbFunc(err);
@@ -135,59 +127,29 @@ module.exports = function(reqInfo, reqDetail, result, basePath, cbFunc) {
 }
 
 /**
- * get 2-hop result by response data and basePath
+ * get 3-hop result by response data and basePath
  *
- * @param {Object} err infomation
+ * @param {Object} url request url
  * @param {Object} response data
- * @param {Array} basePath the base path of the request
+ * @param {Object} basePath_i C.CId from last hop
  * @param {Array} final result set
  * @param {Object} reqDetail the infomation about the query pair
+ * @param {Function} callback
  */
-function handle_2_hop_result(url, reqInfo, basePath, result, reqDetail) {
-    tadaRequest(url, reqInfo, function(err, data) {
-        var FidsArray = data[0].F;//this array only has one element, get its "F" array
-        var FidsStringArray = [];//resultId's F.FId
-
-        if(FidsArray != null)
-        {
-            for(var i=0;i<FidsArray.length;i++){
-                FidsStringArray[i]=FidsArray[i].FId;
-            }
-            
-            /*find intersection of startFid and endFid*/
-            var hashTable = {};
-            for(var i = 0; i<basePath.length;i++){
-                hashTable[basePath[i]] = 1;
-            }
-            for(var i = 0;i<FidsStringArray.length;i++){
-                if(FidsStringArray[i] in hashTable){
-                    //2-hop result
-                    var path = [reqDetail.value[0], FidsStringArray[i], reqDetail.value[1]];
-                    log.debug("found 2-hop(Id->F.FId->Id) result:"+path);
-                    //add to result set
-                    result.push(path);
-                }
-                hashTable[FidsStringArray[i]] = 1;
-            }
-        }        
-        callback(null);
-    });
-
-    
-}
-
 function handle_3_hop_result(url, reqInfo, basePath_i, result, reqDetail, callback){
     
     tadaRequest(url, reqInfo, function(err, data) {
-        for(var i=0; i < data.length;i++){
-            var resultId = data[i].Id; 
-            var path = [reqDetail.value[0], basePath_i, resultId, reqDetail.value[1]];
+        if(data != null)
+        {
+            for(var i=0; i < data.length;i++){
+                var resultId = data[i].Id; 
+                var path = [reqDetail.value[0], basePath_i, resultId, reqDetail.value[1]];
 
-            log.debug("found 3-hop(Id->F.FId->Id->"+reqDetail.desc[1]+") result:"+path);
-            //log.debug(JSON.stringify(result));
-            //add to result set
-            result.push(path);
-        }
+                log.debug("found 3-hop(Id->C.CId->Id->"+reqDetail.desc[1]+") result:"+path);
+                //add to result set
+                result.push(path);
+            }
+        }   
         callback(null);
     });
     
