@@ -3,7 +3,7 @@ var async = require('async');
 var tadaRequest = require('../tada-request');
 var magUrlMake = require('../mag-url-make');
 
-var log = log4js.getLogger('Id-RId');
+var log = log4js.getLogger('F.FId');
 
 // Using this object to check whether this path app suitable to the query pair
 var adatper = {
@@ -23,7 +23,6 @@ function searchPath(reqInfo, reqDetail, result, basePath, cbFunc) {
     async.parallel([
         function(callback){
             //F.FId->Id
-            var error = null;
             if(reqDetail.desc[1]=="Id")
             {
                 //request param
@@ -31,35 +30,76 @@ function searchPath(reqInfo, reqDetail, result, basePath, cbFunc) {
                 var attributes = "F.FId";
                 var count = 100;
                 //make url
-                var url = module.exports(expr, attributes, count);
+                var url = magUrlMake(expr, attributes, count);
                 //send request
                 if(url != null){
                     tadaRequest(url, reqInfo, function(err, data) {
                         handle_2_hop_result(err, data, basePath, result, reqDetail);
+                        callback(null);
                     });
                 }
                 else{
-                    error="get URL error: url is null!";
+                    error="F.FId->Id get URL error: url is null!";
+                    callback(null);//not callback error
                 }
             }
-            //if not, exit immediately
-            callback(error);
+            else{
+                callback(null);
+            }//if not, exit immediately
         },
         function(callback) {
             // F.FId->Id->AA.AuId
-
-            var error = null;
             if(reqDetail.desc[1]=="AA.AuId"){
-                
-            }
+                async.each(basePath, function(item, finish) {
+                    var expr = "And(Composite(F.FId="+ item +"),Composite(AA.AuId="+reqDetail.value[1]+"))";
+                    var attributes = "Id";
+                    var count = 100;
 
+                    //make url
+                    var url = magUrlMake(expr, attributes, count);
 
-            callback(error);
+                    //send request
+                    if(url != null){
+                        handle_3_hop_result(url, reqInfo, item, result, reqDetail, finish);
+                    }
+                    else{
+                        error="F.FId->Id->AA.AuId get URL error: url is null!";
+                        finish(null);//do not send error
+                    }
+                }, 
+                function(err) {
+                    callback(err)
+                });
+            } else {
+                callback(null);
+            }            
         },
         function(callback) {
             // F.FId->Id->Id
+            if(reqDetail.desc[1]=="Id"){
+                async.each(basePath, function(item, finish) {
+                    var expr = "And(Composite(F.FId="+ item +"),RId="+reqDetail.value[1]+")";
+                    var attributes = "Id";
+                    var count = 10000;
 
-            callback(null);
+                    //make url
+                    var url = magUrlMake(expr, attributes, count);
+
+                    //send request
+                    if(url != null){
+                        handle_3_hop_result(url, reqInfo, item, result, reqDetail, finish);
+                    }
+                    else{
+                        error="F.FId->Id->Id get URL error: url is null!";
+                        finish(null);//do not send error
+                    }
+                }, 
+                function(err) {
+                    callback(err)
+                });
+            } else {
+                callback(null);
+            } 
         }
     ], function(err) {
         cbFunc(err);
@@ -94,24 +134,42 @@ module.exports = function(reqInfo, reqDetail, result, basePath, cbFunc) {
  */
 function handle_2_hop_result(err, data, basePath, result, reqDetail) {
     var FidsArray = data[0].F;//this array only has one element, get its "F" array
-    var FidsStringArray = new Array();//resultId's F.FId
+    var FidsStringArray = [];//resultId's F.FId
 
     for(var i=0;i<FidsArray.length;i++){
         FidsStringArray[i]=FidsArray[i].FId;
     }
-
-    var hashTable = new Object();//find intersection of startFid and endFid
+    
+    /*find intersection of startFid and endFid*/
+    var hashTable = {};
     for(var i = 0; i<basePath.length;i++){
-        //console.log(basePath[i]);
-        hashTable[key] = 1;
+        hashTable[basePath[i]] = 1;
     }
     for(var i = 0;i<FidsStringArray.length;i++){
-        //console.log(FidsStringArray[i]);
         if(FidsStringArray[i] in hashTable){
             //2-hop result
-            var path = {[reqDetail.value[0], FidsStringArray[i], reqDetail.value[1]]};
-            log.debug("found 2-hop result:"+path);
+            var path = [reqDetail.value[0], FidsStringArray[i], reqDetail.value[1]];
+            log.debug("found 2-hop(Id->F.FId->Id) result:"+path);
+            //add to result set
+            result.push(path);
         }
-        hashTable[key] = 1;
+        hashTable[FidsStringArray[i]] = 1;
     }
+}
+
+function handle_3_hop_result(url, reqInfo, basePath_i, result, reqDetail, callback){
+    
+    tadaRequest(url, reqInfo, function(err, data) {
+        for(var i=0; i < data.length;i++){
+            var resultId = data[i].Id; 
+            var path = [reqDetail.value[0], basePath_i, resultId, reqDetail.value[1]];
+
+            log.debug("found 3-hop(Id->F.FId->Id->"+reqDetail.desc[1]+") result:"+path);
+            //log.debug(JSON.stringify(result));
+            //add to result set
+            result.push(path);
+        }
+        callback(null);
+    });
+    
 }

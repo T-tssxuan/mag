@@ -14,7 +14,7 @@ function placeholder(a, b, c, d, e) {
 var subHandlers = {
     'AA.AuId': placeholder,
     'C.CId': placeholder,
-    'F.FId': placeholder,
+    'F.FId': require('./handlers/F.FId'),
     'Id': require('./handlers/Id'),
     'RId': require('./handlers/Id'),
     'J.JId': placeholder,
