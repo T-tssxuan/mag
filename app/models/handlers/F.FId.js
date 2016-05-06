@@ -19,43 +19,10 @@ var adatper = {
  * @param {Array} basePath the base path of the request
  * @param {Function} cbFunc the callback function
  */
-
-function handle_2_hop_result(err, data, basePath, result) {
-    var FidsArray = data[0].F;//this array only has one element, get its "F" array
-    var FidsStringArray = new Array();
-    for(var i=0;i<FidsArray.length;i++){
-        FidsStringArray[i]=FidsArray[i].FId;
-    }
-
-    var hashTable = new Object();//find intersection of startFid and endFid
-    for(var i = 0; i<startFid.length;i++){
-        console.log(startFid[i]);
-        hash_add(startFid[i], 1);
-    }
-    for(var i = 0;i<endFid.length;i++){
-        console.log(endFid[i]);
-        hash_add(endFid[i], 1);
-    }
-
-}
-
-function hash_add(key, value){
-    if(key in hashTable){
-         //2-hop result
-        var path = {startId, key, endId};
-        two_hop_result[count_2_hop_result] = path;
-        count_2_hop_result++;
-        console.log("found result");
-    }
-    hashTable[key] = value;
-}
-
-
 function searchPath(reqInfo, reqDetail, result, basePath, cbFunc) {
     async.parallel([
         function(callback){
             //F.FId->Id
-
             var error = null;
             if(reqDetail.desc[1]=="Id")
             {
@@ -68,15 +35,15 @@ function searchPath(reqInfo, reqDetail, result, basePath, cbFunc) {
                 //send request
                 if(url != null){
                     tadaRequest(url, reqInfo, function(err, data) {
-                        handle_2_hop_result(err, data, basePath, result);
+                        handle_2_hop_result(err, data, basePath, result, reqDetail);
                     });
                 }
                 else{
                     error="get URL error: url is null!";
                 }
             }
-            
-            callback(err);
+            //if not, exit immediately
+            callback(error);
         },
         function(callback) {
             // F.FId->Id->AA.AuId
@@ -107,5 +74,38 @@ module.exports = function(reqInfo, reqDetail, result, basePath, cbFunc) {
         cbFunc();
     } else {
         searchPath(reqInfo, reqDetail, result, basePath, cbFunc);
+    }
+}
+
+/**
+ * get 2-hop result by response data and basePath
+ *
+ * @param {Object} err infomation
+ * @param {Object} response data
+ * @param {Array} basePath the base path of the request
+ * @param {Array} final result set
+ * @param {Object} reqDetail the infomation about the query pair
+ */
+function handle_2_hop_result(err, data, basePath, result, reqDetail) {
+    var FidsArray = data[0].F;//this array only has one element, get its "F" array
+    var FidsStringArray = new Array();//resultId's F.FId
+    
+    for(var i=0;i<FidsArray.length;i++){
+        FidsStringArray[i]=FidsArray[i].FId;
+    }
+
+    var hashTable = new Object();//find intersection of startFid and endFid
+    for(var i = 0; i<basePath.length;i++){
+        //console.log(basePath[i]);
+        hashTable[key] = 1;
+    }
+    for(var i = 0;i<FidsStringArray.length;i++){
+        //console.log(FidsStringArray[i]);
+        if(FidsStringArray[i] in hashTable){
+            //2-hop result
+            var path = {[reqDetail.value[0], FidsStringArray[i], reqDetail.value[1]]};
+            log.debug("found 2-hop result:"+path);
+        }
+        hashTable[key] = 1;
     }
 }
