@@ -51,6 +51,7 @@ var tadaRequest = function (url, info, callback, maxTry) {
                 info.recievedCount = 0;
                 info.timeoutCount = 0;
                 info.timeout -= info.timeout / 20;
+                info.timeout = info.timeout > 200? info.timeout : 200;
             } else if (info.timeoutCount / sum >= 0.8) {
                 info.recievedCount = 0;
                 info.timeoutCount = 0;
