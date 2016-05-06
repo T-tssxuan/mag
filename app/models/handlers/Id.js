@@ -152,8 +152,8 @@ function searchPath3(reqInfo, reqDetail, result, Id, callback) {
 function searchPath4(reqInfo, reqDetail, result, Id, callback) {
     var Id1 = reqDetail.value[0];
     var Id2 = reqDetail.value[1];
-    var url1 = magUrlMake('Id=' + Id, 'F.FId', 1);
-    var url2 = magUrlMake('Id=' + Id2, 'F.FId', 1);
+    var url1 = magUrlMake('Id=' + Id, 'F.FId', 100);
+    var url2 = magUrlMake('Id=' + Id2, 'F.FId', 100);
     searchTowAndCompare(url1, url1, reqInfo, function(err, result) {
         if (err || result[0].length == 0 || result[1].length == 0) {
             return callback(null);
