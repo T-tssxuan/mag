@@ -31,9 +31,10 @@ var tadaRequest = function (url, info, callback, maxTry) {
             callback(err, data);
         } else {
             log.warn('info: ' + JSON.stringify(info));
+            log.debug('retry: ' + tryTime + url);
             // if failed retry
             info.timeoutCount++;
-            if (info.flag && tryTime > 0) {
+            if (info.flag && tryTime > 1) {
                 tadaRequest(url, info, callback, --tryTime);
             } else {
                 log.error('failed no retry ' + ' url: ' + url);

@@ -289,7 +289,7 @@ function process3Hop(reqInfo, reqDetail, result, ids, callback) {
 
 function processAuFId(result, reqDetail, from, to, field1, field2) {
     var map = {};
-    if (!to[field1]) {
+    if (!to || !to[field1]) {
         return;
     }
     for (var i = 0; i < to[field1].length; i++) {
@@ -313,10 +313,13 @@ function processAuFId(result, reqDetail, from, to, field1, field2) {
 }
 function processJCId(result, reqDetail, from, to, field1, field2) {
     var map = {};
-    if (!to[field1]) {
+    if (!to || !to[field1]) {
         return;
     }
     for (var i = 0; i < from.length; i++) {
+        if (!from[i][1][field1]) {
+            continue;
+        }
         if (from[i][1][field1][field2] == to[field1][field2]) {
             result.push([
                 reqDetail.value[0],
