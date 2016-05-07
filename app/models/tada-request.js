@@ -14,10 +14,8 @@ var log = log4js.getLogger('tadaRequest');
  */
 var tadaRequest = function (url, info, callback, maxTry) {
     var tryTime = maxTry || 4;
-    log.warn('info: ' + JSON.stringify(info));
     request.get(url, {timeout: info.timeout}, function (error, response, body) {
         if (!error && response.statusCode == 200) {
-            log.info(response.statusCode + '');
             // if successed parse the data and invoke the callback function
             info.receivedCount++;
             var err = null;
@@ -32,12 +30,11 @@ var tadaRequest = function (url, info, callback, maxTry) {
             console.log(JSON.stringify(data));
             callback(err, data);
         } else {
+            log.warn('info: ' + JSON.stringify(info));
             // if failed retry
             info.timeoutCount++;
-            if (info.flag && tryTime > 1) {
+            if (info.flag && tryTime > 0) {
                 tadaRequest(url, info, callback, --tryTime);
-                log.debug('failed retry: ' + 
-                          tryTime + ' url: ' + url);
             } else {
                 log.error('failed no retry ' + ' url: ' + url);
                 callback('failed', data);
