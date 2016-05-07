@@ -105,7 +105,7 @@ function searchPath2(reqInfo, reqDetail, result, Id, callback) {
             return callback(null);
         }
         if (data[0]['J']['JId'] == data[1]['J']['JId']) {
-            result.push([Id1, Id, result[0]['J']['JId'], Id2]);
+            result.push([Id1, Id, data[0]['J']['JId'], Id2]);
         }
         callback(null);
     });
@@ -207,7 +207,7 @@ function searchPath5(reqInfo, reqDetail, result, Ids, callback) {
                     if (!err && data.length > 0 && data[0]['RId']) {
                         if (reqDetail.desc[1] == 'Id'
                             && data[0]['RId'].indexOf(Id2) != -1) {
-                            result.push(Id1, item, Id2);
+                            result.push([Id1, item, Id2]);
                         }
                         elements.push([item, data[0]['RId']]);
                     }
@@ -240,7 +240,7 @@ function searchPath5(reqInfo, reqDetail, result, Ids, callback) {
             }
             for (var j = 0; j < data[1].length; j++) {
                 if (map[data[1][j]['Id']]) {
-                    result.push(Id1, data[0][i][0], data[1][j]['Id'], Id2);
+                    result.push([Id1, data[0][i][0], data[1][j]['Id'], Id2]);
                 }
             }
         }
