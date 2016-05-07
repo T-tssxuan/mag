@@ -249,6 +249,122 @@ function searchPath5(reqInfo, reqDetail, result, Ids, callback) {
     });
 }
 
+function process3Hop(reqInfo, reqDetail, result, ids, callback) {
+    var attribute = 'AA.AuId,J.JId,C.CId,F.FId';
+    async.parallel([
+        function(finish) {
+            var idsData = [];
+            async.each(ids, function(item, next) {
+                var expr = 'Id=' + item;
+                var url = magUrlMake(expr, attribute);
+                tadaRequest(url, reqInfo, function(err, data) {
+                    if (!err && data.length > 0) {
+                        idsData.push([item, data[0]]);
+                    }
+                    next(null);
+                });
+            }, function(err) {
+                finish(null, idsData);
+            });
+        }, 
+        function(finish) {
+            var expr = 'Id=' + reqDetail.value[1];
+            var url = magUrlMake(expr, attribute);
+            tadaRequest(url, reqInfo, function(err, data) {
+                if (!err && data.length > 0) {
+                    finish(null, data[0]);
+                } else {
+                    finish(null, null);
+                }
+            });
+        }
+    ], function(err, data) {
+        processAuFId(result, reqDetail, data[0], data[1], 'AA', 'AuId');
+        processAuFId(result, reqDetail, data[0], data[1], 'F', 'FId');
+        processJCId(result, reqDetail, data[0], data[1], 'J', 'JId');
+        processJCId(result, reqDetail, data[0], data[1], 'C', 'CId');
+        callback(null);
+    });
+}
+
+function processAuFId(result, reqDetail, from, to, field1, field2) {
+    var map = {};
+    if (!to[field1]) {
+        return;
+    }
+    for (var i = 0; i < to[field1].length; i++) {
+        map[to[field1][i][field2]] = 1;
+    }
+    for (var i = 0; i < from.length; i++) {
+        if (!from[i][1][field1]) {
+            continue;
+        }
+        for (var j = 0; j < from[i][1][field1].length; j++) {
+            if (map[from[i][1][field1][j][field2]]) {
+                result.push([
+                    reqDetail.value[0],
+                    from[i][0],
+                    from[i][1][field1][j][field2],
+                    reqDetail.value[1]
+                ]);
+            }
+        }
+    }
+}
+function processJCId(result, reqDetail, from, to, field1, field2) {
+    var map = {};
+    if (!to[field1]) {
+        return;
+    }
+    for (var i = 0; i < from.length; i++) {
+        if (from[i][1][field1][field2] == to[field1][field2]) {
+            result.push([
+                reqDetail.value[0],
+                from[i][0],
+                from[i][1][field1][field2],
+                reqDetail.value[1]
+            ]);
+        }
+    }
+}
+
+function process2Hop(reqInfo, reqDetail, result, ids, callback) {
+    var expr = 'Composite(AA.AuId=' + reqDetail.value[1] + ')';
+    var url = magUrlMake(expr, 'Id', 10000);
+    tadaRequest(url, reqInfo, function(err, data) {
+        if (!err && data > 0) {
+            for (var i = 0; i < data.length; i++) {
+                if (ids.indexOf(data['Id']) != -1) {
+                    result.push([
+                        reqDetail.value[0],
+                        data['Id'],
+                        reqDetail.value[1]
+                    ]);
+                }
+            }
+        }
+        callback(null);
+    });
+}
+
+function searchPathSub(reqInfo, reqDetail, result, basePath, cbFunc) {
+    async.parallel([
+        function(callback) {
+            if (reqDetail.desc[1] == 'AA.AuId') {
+                process2Hop(reqInfo, reqDetail, result, basePath, callback);
+            } else {
+                process3Hop(reqInfo, reqDetail, result, basePath, callback);
+            }
+        },
+        function(callback) {
+            // Id->RId->RId->(AA.AuId, Id)
+            searchPath5(reqInfo, reqDetail, result, basePath, callback);
+        }
+    ], function(err) {
+        cbFunc(err);
+    });
+}
+
 /**
  * Search the path with given basePath
  *
@@ -313,6 +429,6 @@ module.exports = function(reqInfo, reqDetail, result, basePath, cbFunc) {
     if (adatper[reqDetail.desc[0]].indexOf(reqDetail.desc[1]) == -1) {
         cbFunc();
     } else {
-        searchPath(reqInfo, reqDetail, result, basePath, cbFunc);
+        searchPathSub(reqInfo, reqDetail, result, basePath, cbFunc);
     }
 }
