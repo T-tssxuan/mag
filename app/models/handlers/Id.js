@@ -62,16 +62,18 @@ function searchPath1(reqInfo, reqDetail, result, Id, callback) {
             if (err || data[0].length == 0 || data[1].length == 0) {
                 return callback(null);
             }
-            if (!data[0]['AA'] || !data[1]['AA']) {
+            if (!data[0][0]['AA'] || !data[1][0]['AA']) {
                 return callback(null);
             }
             var tmp = {};
-            var arr1 = data[0]['AA'];
-            var arr2 = data[1]['AA'];
+            var arr1 = data[0][0]['AA'];
+            var arr2 = data[1][0]['AA'];
             for (var i = 0; i < arr1.length; i++) {
                 tmp[arr1[i]['AuId']] = 1;
             }
+            log.debug(tmp);
             for (var i = 0; i < arr2.length; i++) {
+                log.debug(arr2[i]['AuId']);
                 if (tmp[arr2[i]['AuId']]) {
                     result.push([Id1, Id, arr2[i]['AuId'], Id2]);
                     log.debug('Id->RId->AA.AuId->Id: [' + Id1 + ', ' + Id 
@@ -101,11 +103,11 @@ function searchPath2(reqInfo, reqDetail, result, Id, callback) {
         if (err || data[0].length == 0 || data[1].length == 0) {
             return callback(null);
         }
-        if (!data[0]['J'] || !data[1]['J']) {
+        if (!data[0][0]['J'] || !data[1][0]['J']) {
             return callback(null);
         }
-        if (data[0]['J']['JId'] == data[1]['J']['JId']) {
-            result.push([Id1, Id, data[0]['J']['JId'], Id2]);
+        if (data[0][0]['J']['JId'] == data[1][0]['J']['JId']) {
+            result.push([Id1, Id, data[0][0]['J']['JId'], Id2]);
         }
         callback(null);
     });
@@ -129,11 +131,11 @@ function searchPath3(reqInfo, reqDetail, result, Id, callback) {
         if (err || data[0].length == 0 || data[1].length == 0) {
             return callback(null);
         }
-        if (!data[0]['C'] || !data[1]['C']) {
+        if (!data[0][0]['C'] || !data[1][0]['C']) {
             return callback(null);
         }
-        if (data[0]['C']['CId'] == data[1]['C']['CId']) {
-            result.push([Id1, Id, data[0]['C']['CId'], Id2]);
+        if (data[0][0]['C']['CId'] == data[1][0]['C']['CId']) {
+            result.push([Id1, Id, data[0][0]['C']['CId'], Id2]);
         }
         callback(null);
     });
@@ -157,12 +159,12 @@ function searchPath4(reqInfo, reqDetail, result, Id, callback) {
         if (err || data[0].length == 0 || data[1].length == 0) {
             return callback(null);
         }
-        if (!data[0]['F'] || !data[1]['F']) {
+        if (!data[0][0]['F'] || !data[1][0]['F']) {
             return callback(null);
         }
         var tmp = {};
-        var arr1 = data[0]['F'];
-        var arr2 = data[1]['F'];
+        var arr1 = data[0][0]['F'];
+        var arr2 = data[1][0]['F'];
         for (var i = 0; i < arr1.length; i++) {
             tmp[arr1[i]['FId']] = 1;
         }
@@ -231,19 +233,18 @@ function searchPath5(reqInfo, reqDetail, result, Ids, callback) {
         if (data[0].length <= 0 || data[1].length <= 0) {
             return callback(null);
         } 
-        log.debug('process Id->RId->RId->(RId, AA.AuId)');
         var map = {};
+        for (var i = 0; i < data[1].length; i++) {
+            map[data[1][i]['Id']] = 1;
+        }
         for (var i = 0; i < data[0].length; i++) {
-            map = {};
             for (var j = 0; j < data[0][i][1].length; j++) {
-                map[data[0][i][1][j]] = 1;
-            }
-            for (var j = 0; j < data[1].length; j++) {
-                if (map[data[1][j]['Id']]) {
-                    result.push([Id1, data[0][i][0], data[1][j]['Id'], Id2]);
+                if (map[data[0][i][1][j]]) {
+                    result.push(Id1, data[0][i][0], data[0][i][1][j], Id2);
                 }
             }
         }
+        log.debug('size: ' + result.length);
         callback(null);
     });
 }
