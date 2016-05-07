@@ -187,49 +187,68 @@ function searchPath4(reqInfo, reqDetail, result, Id, callback) {
  * @param {Number} Id
  * @param {Function} callback
  */
-function searchPath5(reqInfo, reqDetail, result, Id, callback) {
+function searchPath5(reqInfo, reqDetail, result, Ids, callback) {
     log.debug('Search Path: Id->RId->RId->*');
-    var expr = '';
     var Id1 = reqDetail.value[0];
     var Id2 = reqDetail.value[1];
+    var expr = '';
     if (reqDetail.desc[1] == 'Id') {
-        // search Id->RId->RId
-        expr = 'And(Id=' + Id + ',';
-        expr += 'RId=' + Id2 + ')';
-        tadaRequest(magUrlMake(expr), reqInfo, function(err, data) {
-            if (!err && data.length != 0 ) {
-                log.debug('Id->RId->RId data length: ' + data.length);
-                result.push([Id1, Id, Id2]);
-                log.debug('Id->RId->RId: [' + Id1 + ',' + Id + ',' + Id2 
-                          + ']');
-            }
-            callback(null);
-        });
+        // search Id->RId->RId(->RId) 2-hop and 3-hop
+        expr = 'RId=' + Id2;
     } else {
-        // search Id->RId->AA.AuId->Id
-        var url = magUrlMake('RId=' + Id, 'RId', 1);
-        tadaRequest(url, reqInfo, function(err, data) {
-            if (!err && data.length != 0 && data['RId']) {
-                // get validate next hop
-                async.each(data, function(item, finish) {
-                    var tmpExpr = 'And(Id=' + item + ',';
-                    Expr += 'RId=' + Id2 + ')';
-                    tadaRequest(magUrlMake(tmpExpr), function(err, data) {
-                        if (!err && data.length != 0) {
-                            result.push([Id1, Id, item, Id2]);
-                        }
-                        callback(null);
-                    });
-                }, function() {
-                    callback(null);
-                });
-                // 
-            } else {
-                callback(null);
-            }
-        });
+        // search RId->RId->RId->AA.AuId 3-hop
+        expr = 'Composite(AA.AuId=' + Id2 + ')';
     }
+    async.parallel([
+        function(finish) {
+            var elements = [];
+            async.each(Ids, function(item, next) {
+                var url = magUrlMake('Id=' + item, 'RId');
+                tadaRequest(url, reqInfo, function(err, data) {
+                    if (!err && data.length > 0 && data[0]['RId']) {
+                        if (reqDetail.desc[1] == 'Id'
+                            && data[0]['RId'].indexOf(Id2) != -1) {
+                            result.push(Id1, item, Id2);
+                        }
+                        elements.push([item, data[0]['RId']]);
+                    }
+                    next(null);
+                });
+            }, function() {
+                finish(null, elements);
+            });
+        },
+        function(finish) {
+            var url = magUrlMake(expr, 'Id', 10000);
+            tadaRequest(url, reqInfo, function(err, data) {
+                if (!err && data.length > 0) {
+                    finish(null, data);
+                } else {
+                    finish(null, []);
+                }
+            });
+        }
+    ], function(err, result) {
+        if (result[0].length <= 0 || result[1].length <= 0) {
+            return callback(null);
+        } 
+        log.debug('process Id->RId->RId->(RId, AA.AuId)');
+        var map = {};
+        for (var i = 0; i < result[0].length; i++) {
+            map = {};
+            for (var j = 0; j < result[0][i][1].length; j++) {
+                map[result[0][i][1][j]] = 1;
+            }
+            for (var j = 0; j < result[1].length; j++) {
+                if (map[result[1][j]['Id']]) {
+                    result.push(Id1, result[0][i][0], result[1][j]['Id'], Id2);
+                }
+            }
+        }
+        callback(null);
+    });
 }
+
 /**
  * Search the path with given basePath
  *
@@ -273,11 +292,7 @@ function searchPath(reqInfo, reqDetail, result, basePath, cbFunc) {
         },
         function(callback) {
             // Id->RId->AA.AuId->(AA.AuId, Id)
-            async.each(basePath, function(item, finish) {
-                searchPath5(reqInfo, reqDetail, result, item, finish);
-            }, function(err) {
-                callback(err);
-            });
+            searchPath5(reqInfo, reqDetail, result, basePath, callback);
         }
     ], function(err) {
         cbFunc(err);
