@@ -48,7 +48,6 @@ function searchPath1(reqInfo, reqDetail, result, Id, callback) {
         expr += 'Composite(AA.AuId=' + Id2 + '))';
         tadaRequest(magUrlMake(expr), reqInfo, function(err, data) {
             if (!err && data.length != 0) {
-                log.debug('Id->AA.AuId data length: ' + data.length);
                 result.push([Id1, Id, Id2]);
                 log.debug('Id->RId->AA.AuId: [' + Id1 + ',' + Id + ',' + Id2 
                           + ']');
@@ -59,16 +58,16 @@ function searchPath1(reqInfo, reqDetail, result, Id, callback) {
         // search Id->RId->AA.AuId->Id
         var url1 = magUrlMake('Id=' + Id, 'AA.AuId', 1);
         var url2 = magUrlMake('Id=' + Id2, 'AA.AuId', 1);
-        searchTowAndCompare(url1, url2, reqInfo, function(err, result) {
-            if (err || result[0].length == 0 || result[1].length == 0) {
+        searchTowAndCompare(url1, url2, reqInfo, function(err, data) {
+            if (err || data[0].length == 0 || data[1].length == 0) {
                 return callback(null);
             }
-            if (!result[0]['AA'] || !result[1]['AA']) {
+            if (!data[0]['AA'] || !data[1]['AA']) {
                 return callback(null);
             }
             var tmp = {};
-            var arr1 = result[0]['AA'];
-            var arr2 = result[1]['AA'];
+            var arr1 = data[0]['AA'];
+            var arr2 = data[1]['AA'];
             for (var i = 0; i < arr1.length; i++) {
                 tmp[arr1[i]['AuId']] = 1;
             }
@@ -98,14 +97,14 @@ function searchPath2(reqInfo, reqDetail, result, Id, callback) {
     var Id2 = reqDetail.value[1];
     var url1 = magUrlMake('Id=' + Id, 'J.JId', 1);
     var url2 = magUrlMake('Id=' + Id2, 'J.JId', 1);
-    searchTowAndCompare(url1, url1, reqInfo, function(err, result) {
-        if (err || result[0].length == 0 || result[1].length == 0) {
+    searchTowAndCompare(url1, url1, reqInfo, function(err, data) {
+        if (err || data[0].length == 0 || data[1].length == 0) {
             return callback(null);
         }
-        if (!result[0]['J'] || !result[1]['J']) {
+        if (!data[0]['J'] || !data[1]['J']) {
             return callback(null);
         }
-        if (result[0]['J']['JId'] == result[1]['J']['JId']) {
+        if (data[0]['J']['JId'] == data[1]['J']['JId']) {
             result.push([Id1, Id, result[0]['J']['JId'], Id2]);
         }
         callback(null);
@@ -126,15 +125,15 @@ function searchPath3(reqInfo, reqDetail, result, Id, callback) {
     var Id2 = reqDetail.value[1];
     var url1 = magUrlMake('Id=' + Id, 'C.CId', 1);
     var url2 = magUrlMake('Id=' + Id2, 'C.CId', 1);
-    searchTowAndCompare(url1, url1, reqInfo, function(err, result) {
-        if (err || result[0].length == 0 || result[1].length == 0) {
+    searchTowAndCompare(url1, url1, reqInfo, function(err, data) {
+        if (err || data[0].length == 0 || data[1].length == 0) {
             return callback(null);
         }
-        if (!result[0]['C'] || !result[1]['C']) {
+        if (!data[0]['C'] || !data[1]['C']) {
             return callback(null);
         }
-        if (result[0]['C']['CId'] == result[1]['C']['CId']) {
-            result.push([Id1, Id, result[0]['C']['CId'], Id2]);
+        if (data[0]['C']['CId'] == data[1]['C']['CId']) {
+            result.push([Id1, Id, data[0]['C']['CId'], Id2]);
         }
         callback(null);
     });
@@ -154,16 +153,16 @@ function searchPath4(reqInfo, reqDetail, result, Id, callback) {
     var Id2 = reqDetail.value[1];
     var url1 = magUrlMake('Id=' + Id, 'F.FId', 100);
     var url2 = magUrlMake('Id=' + Id2, 'F.FId', 100);
-    searchTowAndCompare(url1, url1, reqInfo, function(err, result) {
-        if (err || result[0].length == 0 || result[1].length == 0) {
+    searchTowAndCompare(url1, url1, reqInfo, function(err, data) {
+        if (err || data[0].length == 0 || data[1].length == 0) {
             return callback(null);
         }
-        if (!result[0]['F'] || !result[1]['F']) {
+        if (!data[0]['F'] || !data[1]['F']) {
             return callback(null);
         }
         var tmp = {};
-        var arr1 = result[0]['F'];
-        var arr2 = result[1]['F'];
+        var arr1 = data[0]['F'];
+        var arr2 = data[1]['F'];
         for (var i = 0; i < arr1.length; i++) {
             tmp[arr1[i]['FId']] = 1;
         }
@@ -228,20 +227,20 @@ function searchPath5(reqInfo, reqDetail, result, Ids, callback) {
                 }
             });
         }
-    ], function(err, result) {
-        if (result[0].length <= 0 || result[1].length <= 0) {
+    ], function(err, data) {
+        if (data[0].length <= 0 || data[1].length <= 0) {
             return callback(null);
         } 
         log.debug('process Id->RId->RId->(RId, AA.AuId)');
         var map = {};
-        for (var i = 0; i < result[0].length; i++) {
+        for (var i = 0; i < data[0].length; i++) {
             map = {};
-            for (var j = 0; j < result[0][i][1].length; j++) {
-                map[result[0][i][1][j]] = 1;
+            for (var j = 0; j < data[0][i][1].length; j++) {
+                map[data[0][i][1][j]] = 1;
             }
-            for (var j = 0; j < result[1].length; j++) {
-                if (map[result[1][j]['Id']]) {
-                    result.push(Id1, result[0][i][0], result[1][j]['Id'], Id2);
+            for (var j = 0; j < data[1].length; j++) {
+                if (map[data[1][j]['Id']]) {
+                    result.push(Id1, data[0][i][0], data[1][j]['Id'], Id2);
                 }
             }
         }
