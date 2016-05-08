@@ -23,12 +23,13 @@ function searchPath(reqInfo, reqDetail, result, basePath, cbFunc) {
     async.parallel([
         function(callback){
             //AA.AfId->AA.AuId
+            log.debug("start to Search Path AA.AfId->AA.AuId");
             if(reqDetail.desc[1]=="AA.AuId")
             {
                 //request param
                 var expr = "Composite(AA.AuId="+reqDetail.value[1]+")";
                 var attributes = "AA.AuId,AA.AfId";
-                var count = 100;
+                var count = 1000;
                 //make url
                 var url = magUrlMake(expr, attributes, count);
                 //send request
@@ -46,6 +47,7 @@ function searchPath(reqInfo, reqDetail, result, basePath, cbFunc) {
         },
         function(callback) {
             // AA.AfId->AA.AuId->Id
+            log.debug("start to Search Path AA.AfId->AA.AuId->Id");
             if(reqDetail.desc[1]=="Id")
             {
                 var expr = "Id="+reqDetail.value[1];

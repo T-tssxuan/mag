@@ -23,6 +23,7 @@ function searchPath(reqInfo, reqDetail, result, basePath, cbFunc) {
     async.parallel([
         function(callback){
             //F.FId->Id
+            log.debug("start to Search Path F.FId->Id");
             if(reqDetail.desc[1]=="Id")
             {
                 //request param
@@ -46,6 +47,7 @@ function searchPath(reqInfo, reqDetail, result, basePath, cbFunc) {
         },
         function(callback) {
             // F.FId->Id->AA.AuId
+            log.debug("start to Search Path F.FId->Id->AA.AuId");
             if(reqDetail.desc[1]=="AA.AuId"){
                 async.each(basePath, function(item, finish) {
                     var expr = "And(Composite(F.FId="+ item +"),Composite(AA.AuId="+reqDetail.value[1]+"))";
@@ -73,6 +75,7 @@ function searchPath(reqInfo, reqDetail, result, basePath, cbFunc) {
         },
         function(callback) {
             // F.FId->Id->Id
+            log.debug("start to Search Path F.FId->Id->Id");
             if(reqDetail.desc[1]=="Id"){
                 async.each(basePath, function(item, finish) {
                     var expr = "And(Composite(F.FId="+ item +"),RId="+reqDetail.value[1]+")";

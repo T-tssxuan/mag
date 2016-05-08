@@ -23,6 +23,7 @@ function searchPath(reqInfo, reqDetail, result, basePath, cbFunc) {
     async.parallel([
         function(callback){
             //C.CId->Id
+            log.debug("start to Search Path C.CId->Id");
             if(reqDetail.desc[1]=="Id")
             {
                 //request param
@@ -47,6 +48,7 @@ function searchPath(reqInfo, reqDetail, result, basePath, cbFunc) {
         },
         function(callback) {
             // C.CId->Id->AA.AuId
+            log.debug("start to Search Path C.CId->Id->AA.AuId");
             if(reqDetail.desc[1]=="AA.AuId")
             {
                 //request param
@@ -70,6 +72,7 @@ function searchPath(reqInfo, reqDetail, result, basePath, cbFunc) {
         },
         function(callback) {
             // C.CId->Id->Id
+            log.debug("start to Search Path C.CId->Id->Id");
             if(reqDetail.desc[1]=="Id")
             {
                 //request param
