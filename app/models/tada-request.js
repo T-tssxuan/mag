@@ -27,10 +27,10 @@ var tadaRequest = function (url, info, callback, maxTry) {
                 err = e;
             }
             log.debug('url: ' + url)
-            console.log(JSON.stringify(data));
+            // console.log(JSON.stringify(data));
             callback(err, data);
         } else {
-            log.warn('info: ' + JSON.stringify(info));
+            log.warn('info: ' + info.processing + ' timeout: ' + info.timeout);
             log.debug('retry: ' + tryTime + url);
             // if failed retry
             info.timeoutCount++;
