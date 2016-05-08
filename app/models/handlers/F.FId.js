@@ -32,7 +32,7 @@ function searchPath(reqInfo, reqDetail, result, basePath, cbFunc) {
                 //make url
                 var url = magUrlMake(expr, attributes, count);
                 //send request
-                if(url != null){
+                if(url){
                     handle_2_hop_result(url, reqInfo, basePath, result, reqDetail, callback);
                 }
                 else{
@@ -56,7 +56,7 @@ function searchPath(reqInfo, reqDetail, result, basePath, cbFunc) {
                     var url = magUrlMake(expr, attributes, count);
 
                     //send request
-                    if(url != null){
+                    if(url){
                         handle_3_hop_result(url, reqInfo, item, result, reqDetail, finish);
                     }
                     else{
@@ -83,7 +83,7 @@ function searchPath(reqInfo, reqDetail, result, basePath, cbFunc) {
                     var url = magUrlMake(expr, attributes, count);
 
                     //send request
-                    if(url != null){
+                    if(url){
                         handle_3_hop_result(url, reqInfo, item, result, reqDetail, finish);
                     }
                     else{
@@ -132,11 +132,11 @@ module.exports = function(reqInfo, reqDetail, result, basePath, cbFunc) {
  */
 function handle_2_hop_result(url, reqInfo, basePath, result, reqDetail, callback) {
     tadaRequest(url, reqInfo, function(err, data) {
-        if(data != null){
+        if(data){
             var FidsArray = data[0].F;//this array only has one element, get its "F" array
             var FidsStringArray = [];//resultId's F.FId
 
-            if(FidsArray != null)
+            if(FidsArray)
             {
                 for(var i=0;i<FidsArray.length;i++){
                     FidsStringArray[i]=FidsArray[i].FId;
@@ -176,7 +176,7 @@ function handle_2_hop_result(url, reqInfo, basePath, result, reqDetail, callback
 function handle_3_hop_result(url, reqInfo, basePath_i, result, reqDetail, callback){
     
     tadaRequest(url, reqInfo, function(err, data) {
-        if(data != null)
+        if(data)
         {
             for(var i=0; i < data.length;i++){
                 var resultId = data[i].Id; 

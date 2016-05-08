@@ -32,7 +32,7 @@ function searchPath(reqInfo, reqDetail, result, basePath, cbFunc) {
                 //make url
                 var url = magUrlMake(expr, attributes, count);
                 //send request
-                if(url != null){
+                if(url){
                     handle_2_hop_result(url, reqInfo, basePath, result, reqDetail, callback);
                     
                 }
@@ -56,7 +56,7 @@ function searchPath(reqInfo, reqDetail, result, basePath, cbFunc) {
                 //make url
                 var url = magUrlMake(expr, attributes, count);
                 //send request
-                if(url != null){
+                if(url){
                     handle_3_hop_result(url, reqInfo, basePath[0], result, reqDetail, callback);
                 }
                 else{
@@ -79,7 +79,7 @@ function searchPath(reqInfo, reqDetail, result, basePath, cbFunc) {
                 //make url
                 var url = magUrlMake(expr, attributes, count);
                 //send request
-                if(url != null){
+                if(url){
                     handle_3_hop_result(url, reqInfo, basePath[0], result, reqDetail, callback);
                 }
                 else{
@@ -125,10 +125,10 @@ module.exports = function(reqInfo, reqDetail, result, basePath, cbFunc) {
  */
 function handle_2_hop_result(url, reqInfo, basePath, result, reqDetail, callback) {
     tadaRequest(url, reqInfo, function(err, data) {
-        if(data != null)
+        if(data)
         {
             var resultC = data[0].C;
-            if(resultC != null)
+            if(resultC)
             {
                 var resultCid = resultC.CId;
 
@@ -157,7 +157,7 @@ function handle_2_hop_result(url, reqInfo, basePath, result, reqDetail, callback
 function handle_3_hop_result(url, reqInfo, basePath_i, result, reqDetail, callback){
     
     tadaRequest(url, reqInfo, function(err, data) {
-        if(data != null)
+        if(data)
         {
             for(var i=0; i < data.length;i++){
                 var resultId = data[i].Id; 

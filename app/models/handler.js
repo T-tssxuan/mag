@@ -18,7 +18,7 @@ var subHandlers = {
     'Id': require('./handlers/Id'),
     'RId': require('./handlers/Id'),
     'J.JId': require('./handlers/J.JId'),
-    'AA.AfId': placeholder
+    'AA.AfId': require('./handlers/AA.AfId')
 }
 
 /**
