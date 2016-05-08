@@ -26,7 +26,6 @@ module.exports = function(expr, attributes, count) {
         url += 'count=' + _count + '&';
         url += 'attributes=' + _attributes;
         url += magKey;
-        log.info("url: " + url);
         return url;
     }
 }

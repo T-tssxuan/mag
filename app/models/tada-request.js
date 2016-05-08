@@ -13,7 +13,7 @@ var log = log4js.getLogger('tadaRequest');
  * @param {Integer} maxTry Optional
  */
 var tadaRequest = function (url, info, callback, maxTry) {
-    var tryTime = maxTry || 4;
+    var tryTime = maxTry || 5;
     request.get(url, {timeout: info.timeout}, function (error, response, body) {
         if (!error && response.statusCode == 200) {
             // if successed parse the data and invoke the callback function
@@ -44,7 +44,6 @@ var tadaRequest = function (url, info, callback, maxTry) {
 
         // Calculate the timeout according to recently statistic
         var sum = info.receivedCount + info.timeoutCount;
-        log.warn("sum: " + sum);
         if (sum > 15) {
             if (info.timeoutCount / sum <= 0.2) {
                 info.receivedCount = 0;
