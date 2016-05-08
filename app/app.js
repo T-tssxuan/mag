@@ -19,7 +19,6 @@ app.get('/', function (req, res) {
     res.send = function(data) {
         res.send = preResSend;
         var elapse = Date.now() - beginTime;
-        var data = 'finished in: ' + elapse + 'ms result: ' + data;
         res.send(data);
         log.info('request finished in ' + elapse + 'ms');
     }

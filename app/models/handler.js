@@ -314,9 +314,8 @@ Handler.prototype.beginId = function(data) {
 }
 
 Handler.prototype.sendResult = function() {
-    log.info('finished');
-    var re = "size: " + this.result.length + " ---->";
-    re += JSON.stringify(this.result);
+    log.info('finished size: ' + this.result.length);
+    var re = JSON.stringify(this.result);
     this.res.send(re);
 }
 
