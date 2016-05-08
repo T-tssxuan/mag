@@ -13,11 +13,9 @@ var log = log4js.getLogger('tadaRequest');
  * @param {Integer} maxTry Optional
  */
 var tadaRequest = function (url, info, callback, maxTry) {
-    var tryTime = maxTry || 4;
-    log.warn('info: ' + JSON.stringify(info));
+    var tryTime = maxTry || 5;
     request.get(url, {timeout: info.timeout}, function (error, response, body) {
         if (!error && response.statusCode == 200) {
-            log.info(response.statusCode + '');
             // if successed parse the data and invoke the callback function
             info.receivedCount++;
             var err = null;
@@ -32,12 +30,12 @@ var tadaRequest = function (url, info, callback, maxTry) {
             console.log(JSON.stringify(data));
             callback(err, data);
         } else {
+            log.warn('info: ' + JSON.stringify(info));
+            log.debug('retry: ' + tryTime + url);
             // if failed retry
             info.timeoutCount++;
             if (info.flag && tryTime > 1) {
                 tadaRequest(url, info, callback, --tryTime);
-                log.debug('failed retry: ' + 
-                          tryTime + ' url: ' + url);
             } else {
                 log.error('failed no retry ' + ' url: ' + url);
                 callback('failed', data);
@@ -46,9 +44,8 @@ var tadaRequest = function (url, info, callback, maxTry) {
 
         // Calculate the timeout according to recently statistic
         var sum = info.receivedCount + info.timeoutCount;
-        log.warn("sum: " + sum);
         if (sum > 15) {
-            if (info.receivedCount / sum <= 0.2) {
+            if (info.timeoutCount / sum <= 0.2) {
                 info.receivedCount = 0;
                 info.timeoutCount = 0;
                 info.timeout -= info.timeout / 20;
@@ -57,6 +54,7 @@ var tadaRequest = function (url, info, callback, maxTry) {
                 info.receivedCount = 0;
                 info.timeoutCount = 0;
                 info.timeout += info.timeout / 20;
+                info.timeout = info.timeout < 5000? info.timeout : 5000;
             }
         }
     });
