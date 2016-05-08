@@ -153,7 +153,7 @@ Handler.prototype.processSubPath = function(field, elements, callback) {
 Handler.prototype.AAAuIdHop1 = function() {
     var that = this;
     var expr = 'Composite(AA.AuId=' + this.reqDetail.value[0] + ')';
-    var url = magUrlMake(expr, 'Id,AA.AuId,AA.AfId');
+    var url = magUrlMake(expr, 'Id,AA.AuId,AA.AfId', 10000);
 
     // Get the hop-1 result and generate the rest hops
     tadaRequest(url, this.reqInfo, function(err, data) {
@@ -229,7 +229,7 @@ Handler.prototype.IdHop1 = function(callback) {
         } else {
             that.sendResult();
         }
-    });
+    }, 1000);
 }
 
 /**

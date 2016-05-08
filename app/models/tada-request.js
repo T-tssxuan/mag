@@ -13,7 +13,7 @@ var log = log4js.getLogger('tadaRequest');
  * @param {Integer} maxTry Optional
  */
 var tadaRequest = function (url, info, callback, maxTry) {
-    var tryTime = maxTry || 5;
+    var tryTime = maxTry || 10;
     request.get(url, {timeout: info.timeout}, function (error, response, body) {
         if (!error && response.statusCode == 200) {
             // if successed parse the data and invoke the callback function
