@@ -3,7 +3,7 @@ var request = require('request');
 
 var log = log4js.getLogger('tadaRequest');
 
-var MAXRequest= 100;
+var MAXRequest= 120;
 var queue = [];
 var processing = 0;
 
@@ -47,7 +47,7 @@ var tadaRequest = function (url, info, callback, maxTry) {
             callback(err, data);
         } else {
             log.warn('info timeout: ' + info.timeout);
-            // log.debug('retry: ' + tryTime + url);
+            log.debug('retry: ' + tryTime + ' ' + url);
             // if failed retry
             info.timeoutCount++;
             if (info.flag && tryTime > 1) {
@@ -62,10 +62,10 @@ var tadaRequest = function (url, info, callback, maxTry) {
         var sum = info.receivedCount + info.timeoutCount;
         if (sum > 5) {
             if (info.timeoutCount / sum <= 0.5) {
-                info.timeout -= info.timeout / 20;
-                info.timeout = info.timeout > 200? info.timeout : 200;
+                info.timeout -= info.timeout / 10;
+                info.timeout = info.timeout > 500? info.timeout : 500;
             } else if (info.timeoutCount / sum >= 0.6) {
-                info.timeout += info.timeout / 20;
+                info.timeout += info.timeout / 10;
                 info.timeout = info.timeout < 5000? info.timeout : 5000;
             }
             info.receivedCount = 0;
