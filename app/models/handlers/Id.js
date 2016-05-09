@@ -167,7 +167,7 @@ function process2Hop(reqInfo, reqDetail, result, ids, callback) {
     var expr = 'Composite(AA.AuId=' + reqDetail.value[1] + ')';
     var url = magUrlMake(expr, 'Id', 10000);
     tadaRequest(url, reqInfo, function(err, data) {
-        if (!err && data > 0) {
+        if (!err && data.length > 0) {
             for (var i = 0; i < data.length; i++) {
                 if (ids.indexOf(data['Id']) != -1) {
                     result.push([
