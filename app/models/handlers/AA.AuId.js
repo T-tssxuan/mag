@@ -28,44 +28,58 @@ function searchPath(reqInfo, reqDetail, result, basePath, cbFunc) {
             if (reqDetail.desc[1] != 'AA.AuId') {
                 return callback(null);
             }
-            var expr = "Composite(AA.AuId=" + reqDetail.value[1] + ")";
-            var url = magUrlMake(expr, "AA.AuId,AA.AfId", limit);
-            var afidElements = new Set();
-            // AA.AfId->AA.AuId
-            tadaRequest(url, reqInfo, function(err, data) {
-                if (!err) {
-                    for (var i = 0; i < data.length; i++) {
-                        for (var j = 0; j < data[i].AA.length; j++) {
-                            if (data[i].AA[j].AuId == reqDetail.value[1]) {
-                                afidElements.add(data[i].AA[j].AfId);
+            var afidHash = [];
+            var readyList = [];
+            async.parallel([function(next) {
+                var expr = "Composite(AA.AuId=" + reqDetail.value[1] +")";
+                var url = magUrlMake(expr, "AA.AuId,AA.AfId", limit);
+                tadaRequest(url, reqInfo, function(err, data) {
+                    if (!err) {
+                        for (var i = 0; i < data.length; i++) {
+                            for (var j = 0; j < data[i].AA.length; j++) {
+                                if (data[i].AA[j].AuId == reqDetail.value[1] 
+                                    && data[i].AA[j].AfId) {
+                                    afidHash[data[i].AA[j].AfId] = reqDetail.value[1];
+                                }
                             }
                         }
                     }
-                    async.each(Array.from(afidElements), function(item, next) {
-                        var expr = "And(Id=" + reqDetail.value[0];
-                        expr += ",Composite(AA.AfId=" + item + "))";
-                        var url = magUrlMake(expr, "AA.AuId,AA.AfId", limit);
-                        tadaRequest(url, reqInfo, function(err, data) {
-                            if (!err && data.length > 0) {
-                                for (var i = 0; i < data[0].AA.length; i++) {
-                                    if (data[0].AA[i].AfId == item) {
-                                        result.push([reqDetail.value[0], 
-                                            data[0].AA[i].AuId, 
-                                            item, 
-                                            reqDetail.value[1]]);
+                    next(null);
+                });
+            }, function(next) {
+                async.each(basePath, function(item, nextcall) {
+                    var expr = "Composite(AA.AuId=" + item + ")";
+                    var url = magUrlMake(expr, "AA.AuId,AA.AfId", limit);
+                    tadaRequest(url, reqInfo, function(err, data) {
+                        if (!err) {
+                            var afidSet = new Set();
+                            for (var i = 0; i < data.length; i++) {
+                                for (var j = 0; j < data[i].AA.length; j++) {
+                                    if (data[i].AA[j].AuId == item 
+                                        && data[i].AA[j].AfId) {
+                                        afidSet.add(data[i].AA[j].AfId);
                                     }
                                 }
                             }
-                            next(null);
-                        });
-                    }, function(err) {
-                        log.info("AA.AuId->AA.AfId->AA.AuId finished");
-                        callback(null);
+                            var afidArray = Array.from(afidSet);
+                            for (var i = 0; i < afidArray.length; i++) {
+                                readyList.push({AuId: item, AfId: afidArray[i]});
+                            }
+                        }
+                        nextcall(null);
                     });
-                } else {
-                    log.info("AA.AuId->AA.AfId->AA.AuId error" + err);
-                    callback(null);
+                }, function(err) {
+                    next(null);
+                });
+            }], function(err) {
+                for (var i = 0; i < readyList.length; i++) {
+                    if (afidHash[readyList[i].AfId]) {
+                        result.push([reqDetail.value[0], readyList[i].AuId, 
+                            readyList[i].AfId, reqDetail.value[1]]);
+                    }
                 }
+                log.info("AA.AuId->AA.AfId->AA.AuId finished");
+                callback(null);
             });
         },
         function(callback) {
@@ -90,28 +104,29 @@ function searchPath(reqInfo, reqDetail, result, basePath, cbFunc) {
                 log.info("AA>AuId->Id->AA.AuId finished");
                 callback(null)
             });
-
         },
         function(callback) {
             // AA.AuId->Id 2-hop
             if (reqDetail.desc[1] != 'Id') {
                 return callback(null);
             }
-            async.each(basePath, function(item, next) {
-                var expr = "And(Id=" + reqDetail.value[1];
-                expr += ",Composite(AA.AuId=" + item + "))";
-                var url = magUrlMake(expr, "", limit);
-                tadaRequest(url, reqInfo, function(err, data) {
-                    if (!err && data.length > 0) {
-                        result.push([reqDetail.value[0], item, 
-                            reqDetail.value[1]]);
+            var expr = "Id=" + reqDetail.value[1];
+            var url = magUrlMake(expr, "AA.AuId", limit);
+            tadaRequest(url, reqInfo, function(err, data) {
+                if (!err && data.length > 0) {
+                    var auidHash = [];
+                    for (var i = 0; i < data[0].AA.length; i++) {
+                        auidHash[data[0].AA[i].AuId] = reqDetail.value[1];
                     }
-                    next(null);
-                });
-            }, function(err) {
-                log.info("2-hop AA.AuId->Id finished");
+                    for (var i = 0; i < basePath.length; i++) {
+                        if (auidHash[basePath[i]]) {
+                            result.push([reqDetail.value[0], basePath[i], 
+                                reqDetail.value[1]]);
+                        }
+                    }
+                }
                 callback(null);
-            }); 
+            });
         }, function(callback) {
             // AA.AuId->Id->RId 3-hop
             if (reqDetail.desc[1] != 'Id') {
