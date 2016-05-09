@@ -72,7 +72,7 @@ function searchPath5(reqInfo, reqDetail, result, Ids, callback) {
         for (var i = 0; i < data[0].length; i++) {
             for (var j = 0; j < data[0][i][1].length; j++) {
                 if (map[data[0][i][1][j]]) {
-                    result.push(Id1, data[0][i][0], data[0][i][1][j], Id2);
+                    result.push([Id1, data[0][i][0], data[0][i][1][j], Id2]);
                 }
             }
         }
