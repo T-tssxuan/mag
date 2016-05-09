@@ -14,7 +14,7 @@ var magKey = "&subscription-key=f7cc29509a8443c5b3a5e56b0e38b5a6";
  *
  * @return {String} the constructed url or empty string on error
  */
-module.exports = function(expr, attributes, count) {
+module.exports = function(expr, attributes, count, offset) {
     if (!expr) {
         log.error("expr or attributes not set");
         return '';
@@ -25,6 +25,10 @@ module.exports = function(expr, attributes, count) {
         url += 'expr=' + expr + '&';
         url += 'count=' + _count + '&';
         url += 'attributes=' + _attributes;
+        if (offset) {
+            url += '&offset=' + offset;
+            log.warn('offset: ' + offset);
+        }
         url += magKey;
         return url;
     }

@@ -11,6 +11,13 @@ var adatper = {
     'AA.AuId': ['AA.AuId', 'Id']
 }
 
+var offsets = [];
+
+for (var i = 0; i < 20; i++) {
+    offsets.push(i * 10000);
+}
+
+
 /*
  * search Path Id->RId->RId or Id->RId->RId->AuId
  *
@@ -24,14 +31,14 @@ function searchPath5(reqInfo, reqDetail, result, Ids, callback) {
     log.debug('Search Path: Id->RId->RId->*');
     var Id1 = reqDetail.value[0];
     var Id2 = reqDetail.value[1];
-    var expr = '';
-    if (reqDetail.desc[1] == 'Id') {
-        // search Id->RId->RId(->RId) 2-hop and 3-hop
-        expr = 'RId=' + Id2;
-    } else {
-        // search RId->RId->RId->AA.AuId 3-hop
-        expr = 'Composite(AA.AuId=' + Id2 + ')';
-    }
+    // var expr = '';
+    // if (reqDetail.desc[1] == 'Id') {
+    //     // search Id->RId->RId(->RId) 2-hop and 3-hop
+    //     expr = 'RId=' + Id2;
+    // } else {
+    //     // search RId->RId->RId->AA.AuId 3-hop
+    //     expr = 'Composite(AA.AuId=' + Id2 + ')';
+    // }
     async.parallel([
         function(finish) {
             var elements = [];
@@ -52,14 +59,33 @@ function searchPath5(reqInfo, reqDetail, result, Ids, callback) {
             });
         },
         function(finish) {
-            var url = magUrlMake(expr, 'Id', 100000);
-            tadaRequest(url, reqInfo, function(err, data) {
-                if (!err && data.length > 0) {
-                    finish(null, data);
-                } else {
-                    finish(null, []);
-                }
-            });
+            var expr = '';
+            if (reqDetail.desc[1] == 'AA.AuId') {
+                expr = 'Composite(AA.AuId=' + Id2 + ')';
+                var url = magUrlMake(expr, 'Id', 10000);
+                tadaRequest(url, reqInfo, function(err, data) {
+                    if (!err && data.length > 0) {
+                        finish(null, data);
+                    } else {
+                        finish(null, []);
+                    }
+                });
+            } else {
+                expr = 'RId=' + Id2;
+                var result = [];
+                async.each(offsets, function(item, next) {
+                    log.info('item: ' + item);
+                    var url = magUrlMake(expr, 'Id' , 10000, item);
+                    tadaRequest(url, reqInfo, function(err, data) {
+                        if (!err && data.length > 0) {
+                            result = result.concat(data);
+                        }
+                        next(null);
+                    }, 0, 1);
+                }, function(err) {
+                    finish(null, result);
+                });
+            }
         }
     ], function(err, data) {
         if (data[0].length <= 0 || data[1].length <= 0) {
