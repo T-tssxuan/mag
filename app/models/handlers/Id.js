@@ -52,7 +52,7 @@ function searchPath5(reqInfo, reqDetail, result, Ids, callback) {
             });
         },
         function(finish) {
-            var url = magUrlMake(expr, 'Id', 10000);
+            var url = magUrlMake(expr, 'Id', 100000);
             tadaRequest(url, reqInfo, function(err, data) {
                 if (!err && data.length > 0) {
                     finish(null, data);
@@ -166,13 +166,17 @@ function processJCId(result, reqDetail, from, to, field1, field2) {
 function process2Hop(reqInfo, reqDetail, result, ids, callback) {
     var expr = 'Composite(AA.AuId=' + reqDetail.value[1] + ')';
     var url = magUrlMake(expr, 'Id', 10000);
+    var map = {};
+    for (var i = 0; i < ids.length; i++) {
+        map[ids[i]] = 1;
+    }
     tadaRequest(url, reqInfo, function(err, data) {
         if (!err && data.length > 0) {
             for (var i = 0; i < data.length; i++) {
-                if (ids.indexOf(data['Id']) != -1) {
+                if (map[data[i]['Id']]) {
                     result.push([
                         reqDetail.value[0],
-                        data['Id'],
+                        data[i]['Id'],
                         reqDetail.value[1]
                     ]);
                 }
