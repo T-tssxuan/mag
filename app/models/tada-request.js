@@ -18,8 +18,8 @@ var processing = 0;
  */
 var tadaRequest = function (url, info, callback, maxTry) {
     var tryTime = maxTry || maxTry < 10000 || 10000;
-    log.info('processing: ' + processing + ' MAXRequest: ' + MAXRequest + 
-             ' queue len: ' + queue.length);
+    // log.info('processing: ' + processing + ' MAXRequest: ' + MAXRequest + 
+    //          ' queue len: ' + queue.length);
     if (processing >= MAXRequest) {
         queue.push([url, info, callback, maxTry]);
         return;
