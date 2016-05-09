@@ -100,6 +100,8 @@ function handle_2_hop_result(url, reqInfo, basePath, result, reqDetail, callback
             //find all Afid of the target author
             var hashTable = {};
             for(var i = 0; i < data.length;i++){
+                if(!data[i].AA)
+                    continue;
                 for(var j = 0; j < data[i].AA.length;j++)
                 {
                     var AAArray = data[i].AA;
@@ -142,6 +144,8 @@ function handle_3_hop_result(url, reqInfo, basePath, result, reqDetail, callback
         if(!err && data.length>0)
         {
             var data = data[0].AA;
+            if(!data)
+                return callback(null);
             var resultAuId = [];
 
             //get targetId's AuId
@@ -186,6 +190,8 @@ function handle_AfId(url, reqInfo, item, basePath, result, reqDetail, callback)
             var hashTable = {};
             for(var i=0;i<data.length;i++){
                 var AA = data[i].AA;
+                if(!AA)
+                    continue;
                 for(var j = 0;j<AA.length;j++)
                 {
                     if(AA[j].AuId==item && AA[j].AfId){
