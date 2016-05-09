@@ -3,7 +3,7 @@ var request = require('request');
 
 var log = log4js.getLogger('tadaRequest');
 
-var MAXRequest= 50;
+var MAXRequest= 100;
 var queue = [];
 var processing = 0;
 
@@ -26,9 +26,9 @@ var tadaRequest = function (url, info, callback, maxTry) {
     }
     processing++;
     request.get(url, {timeout: info.timeout}, function (error, response, body) {
+        processing--;
         if (!error && response.statusCode == 200) {
             // if successed parse the data and invoke the callback function
-            processing--;
             if (queue.length > 0) {
                 var tmp = queue.shift();
                 tadaRequest(tmp[0], tmp[1], tmp[2], tmp[3]);
