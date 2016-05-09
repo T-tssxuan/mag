@@ -81,7 +81,7 @@ Handler.prototype.getRequestDetail = function() {
     // the number of result can get.
     // If there are results in the request, the field is valid.
     var testField = function(field, id, expr, pos) {
-        var url = magUrlMake(expr);
+        var url = magUrlMake(expr, '', 1);
 
         tadaRequest(url, that.reqInfo, function(err, data) {
             log.debug('getRequestDetail: ' + JSON.stringify(data));

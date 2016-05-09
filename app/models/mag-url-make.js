@@ -20,7 +20,7 @@ module.exports = function(expr, attributes, count) {
         return '';
     } else {
         var _attributes = attributes || '';
-        var _count = count || 1;
+        var _count = count || count < 1000 || 1000;
         var url = baseUrl;
         url += 'expr=' + expr + '&';
         url += 'count=' + _count + '&';

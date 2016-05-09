@@ -98,28 +98,24 @@ function handle_2_hop_result(url, reqInfo, basePath, result, reqDetail, callback
     tadaRequest(url, reqInfo, function(err, data) {
         if(!err && data.length>0){
             //find all Afid of the target author
-            var resultAfid = [];
+            var hashTable = {};
             for(var i = 0; i < data.length;i++){
                 for(var j = 0; j < data[i].AA.length;j++)
                 {
                     var AAArray = data[i].AA;
                     if(AAArray[j].AuId == reqDetail.value[1] && AAArray[j].AfId)
                     {
-                        //found an Afid of the target author !!!!!!!!!!but may have been existed!!!!!!!!!doesn't matter
-                        resultAfid.push(AAArray[j].AfId);
+                        //found an Afid of the target author
+                        hashTable[AAArray[j].AfId] = 1;
                     }
                 }
             }
 
             //get the intersection of source author and target author
-            var hashTable = {};
             for(var i = 0;i < basePath.length;i++){
-                hashTable[basePath[i]] = 1;
-            }
-            for(var i = 0;i < resultAfid.length;i++){
-                if(resultAfid[i] in hashTable){
+                if(basePath[i] in hashTable){
                     //found 2-hop result
-                    var path = [reqDetail.value[0], resultAfid[i], reqDetail.value[1]];
+                    var path = [reqDetail.value[0], basePath[i], reqDetail.value[1]];
                     //log.debug("found 2-hop(AA.AuId->AA.AfId->AA.AuId) result:"+path);
                     result.push(path);
                 }
@@ -186,29 +182,24 @@ function handle_AfId(url, reqInfo, item, basePath, result, reqDetail, callback)
 {
     tadaRequest(url, reqInfo, function(err, data){
         if(!err && data.length>0){
-            var itemAfId = [];
-
             //find all AfId of item
+            var hashTable = {};
             for(var i=0;i<data.length;i++){
                 var AA = data[i].AA;
                 for(var j = 0;j<AA.length;j++)
                 {
                     if(AA[j].AuId==item && AA[j].AfId){
-                        //found item's AfId !!!!!!!!!!but may have been existed!!!!!!!!!doesn't matter
-                        itemAfId.push(AA[j].AfId);
+                        //found item's AfId 
+                        hashTable[AA[j].AfId] = 1;
                     }
                 }
             }
 
             /*find intersection of basePath and item's AfIds*/
-            var hashTable = {};
             for(var i = 0; i<basePath.length ;i++){
-                hashTable[basePath[i]] = 1;
-            }
-            for(var i = 0; i<itemAfId.length ;i++){
-                if(itemAfId[i] in hashTable){
+                if(basePath[i] in hashTable){
                     //found a 3-hop path
-                    var path = [reqDetail.value[0], itemAfId[i], item, reqDetail.value[1]];
+                    var path = [reqDetail.value[0], basePath[i], item, reqDetail.value[1]];
                     //log.debug("found 3-hop(AA.AuId->AA.AfId->AA.AuId->Id) result:"+path);
                     result.push(path);
                 }
