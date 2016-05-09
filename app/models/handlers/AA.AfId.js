@@ -96,7 +96,7 @@ module.exports = function(reqInfo, reqDetail, result, basePath, cbFunc) {
 
 function handle_2_hop_result(url, reqInfo, basePath, result, reqDetail, callback){
     tadaRequest(url, reqInfo, function(err, data) {
-        if(data){
+        if(!err && data.length>0){
             //find all Afid of the target author
             var resultAfid = [];
             for(var i = 0; i < data.length;i++){
@@ -120,7 +120,7 @@ function handle_2_hop_result(url, reqInfo, basePath, result, reqDetail, callback
                 if(resultAfid[i] in hashTable){
                     //found 2-hop result
                     var path = [reqDetail.value[0], resultAfid[i], reqDetail.value[1]];
-                    log.debug("found 2-hop(AA.AuId->AA.AfId->AA.AuId) result:"+path);
+                    //log.debug("found 2-hop(AA.AuId->AA.AfId->AA.AuId) result:"+path);
                     result.push(path);
                 }
             }
@@ -143,7 +143,7 @@ function handle_2_hop_result(url, reqInfo, basePath, result, reqDetail, callback
 function handle_3_hop_result(url, reqInfo, basePath, result, reqDetail, callback){
     
     tadaRequest(url, reqInfo, function(err, data) {
-        if(data)
+        if(!err && data.length>0)
         {
             var data = data[0].AA;
             var resultAuId = [];
@@ -185,7 +185,7 @@ function handle_3_hop_result(url, reqInfo, basePath, result, reqDetail, callback
 function handle_AfId(url, reqInfo, item, basePath, result, reqDetail, callback)
 {
     tadaRequest(url, reqInfo, function(err, data){
-        if(data){
+        if(!err && data.length>0){
             var itemAfId = [];
 
             //find all AfId of item
@@ -209,7 +209,7 @@ function handle_AfId(url, reqInfo, item, basePath, result, reqDetail, callback)
                 if(itemAfId[i] in hashTable){
                     //found a 3-hop path
                     var path = [reqDetail.value[0], itemAfId[i], item, reqDetail.value[1]];
-                    log.debug("found 3-hop(AA.AuId->AA.AfId->AA.AuId->Id) result:"+path);
+                    //log.debug("found 3-hop(AA.AuId->AA.AfId->AA.AuId->Id) result:"+path);
                     result.push(path);
                 }
             }

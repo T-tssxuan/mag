@@ -52,7 +52,7 @@ function searchPath(reqInfo, reqDetail, result, basePath, cbFunc) {
                 async.each(basePath, function(item, finish) {
                     var expr = "And(Composite(F.FId="+ item +"),Composite(AA.AuId="+reqDetail.value[1]+"))";
                     var attributes = "Id";
-                    var count = 100;
+                    var count = 1000;
 
                     //make url
                     var url = magUrlMake(expr, attributes, count);
@@ -80,7 +80,7 @@ function searchPath(reqInfo, reqDetail, result, basePath, cbFunc) {
                 async.each(basePath, function(item, finish) {
                     var expr = "And(Composite(F.FId="+ item +"),RId="+reqDetail.value[1]+")";
                     var attributes = "Id";
-                    var count = 10000;
+                    var count = 100000;
 
                     //make url
                     var url = magUrlMake(expr, attributes, count);
@@ -135,7 +135,7 @@ module.exports = function(reqInfo, reqDetail, result, basePath, cbFunc) {
  */
 function handle_2_hop_result(url, reqInfo, basePath, result, reqDetail, callback) {
     tadaRequest(url, reqInfo, function(err, data) {
-        if(data){
+        if(!err && data.length>0){
             var FidsArray = data[0].F;//this array only has one element, get its "F" array
             var FidsStringArray = [];//resultId's F.FId
 
@@ -179,7 +179,7 @@ function handle_2_hop_result(url, reqInfo, basePath, result, reqDetail, callback
 function handle_3_hop_result(url, reqInfo, basePath_i, result, reqDetail, callback){
     
     tadaRequest(url, reqInfo, function(err, data) {
-        if(data)
+        if(!err && data.length>0)
         {
             for(var i=0; i < data.length;i++){
                 var resultId = data[i].Id; 
