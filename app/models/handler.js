@@ -2,6 +2,7 @@ var magUrlMake = require('./mag-url-make');
 var log4js = require('log4js');
 var async = require('async');
 var tadaRequest = require('./tada-request');
+var preRequest = require('./prerequest.js');
 
 var log = log4js.getLogger('handler');
 
@@ -29,7 +30,7 @@ var subHandlers = {
  * @param {String} id2
  * @param {Object} res
  */
-function Handler(defaultDelay, id1, id2, res, cache) {
+function Handler(defaultDelay, id1, id2, res) {
     defaultDelay = defaultDelay > 200? defaultDelay : 200;
     defaultDelay = defaultDelay < 5000? defaultDelay : 5000;
     // request info about the timeout of this handle
@@ -39,7 +40,7 @@ function Handler(defaultDelay, id1, id2, res, cache) {
         timeoutCount: 0,
         timeout: defaultDelay * 2,
         flag: true,
-        cache: cache
+        urlCache: {}
     }
 
     // TODO if not a number return immediately
@@ -64,6 +65,8 @@ function Handler(defaultDelay, id1, id2, res, cache) {
 
     log.info('init a Handler with defaultDelay: ' + defaultDelay +
              ' id1: ' + id1 + ' id2: ' + id2);
+
+    preRequest(id1, id2, this.reqInfo.urlCache);
 }
 
 /**
