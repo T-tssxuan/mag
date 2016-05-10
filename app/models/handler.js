@@ -66,7 +66,7 @@ function Handler(defaultDelay, id1, id2, res) {
     log.info('init a Handler with defaultDelay: ' + defaultDelay +
              ' id1: ' + id1 + ' id2: ' + id2);
 
-    preRequest(id1, id2, this.reqInfo.urlCache);
+    preRequest(this.id1, this.id2, this.reqInfo.urlCache);
 }
 
 /**

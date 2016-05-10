@@ -5,7 +5,16 @@ var log = log4js.getLogger('prerequest');
 var async = require('async');
 
 function makeUrls(id1, id2) {
-    var urls = [
+    var genUrls = [];
+    // for 3-hop (Id, AA.AuId)->Id->Id->Id
+    for (var i = 0; i < 20; i++) {
+        var tmp = mapUrlMake('RId=' + id2, 'Id', 10000, i * 10000);
+        var obj = {};
+        obj['base'] = tmp;
+        obj['mapUrl'] = [tmp];
+        genUrls.push(obj);
+    }
+    var literalUrls = [
         // for auid1
         {
             'base': mapUrlMake(
@@ -78,15 +87,7 @@ function makeUrls(id1, id2) {
         }
     ];
 
-    // for 3-hop (Id, AA.AuId)->Id->Id->Id
-    for (var i = 0; i < 20; i++) {
-        var tmp = mapUrlMake('RId=' + id2, 'Id', 10000, i * 10000);
-        var obj = {};
-        obj['base'] = tmp;
-        obj['mapUrl'] = [tmp];
-        urls.push(obj);
-    }
-    return urls;
+    return genUrls.concat(literalUrls);
 }
 
 module.exports = function(id1, id2, cache) {
