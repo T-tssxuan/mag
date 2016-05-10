@@ -21,7 +21,7 @@
 1. AA.AuId1->Id->AA.AuId2
 
    ```
-   var expr = "And(Composite(AA.AuId=" + item + "),Composite(AA.AuId=" + item + "))";
+   var expr = "And(Composite(AA.AuId=" + reqDetail.value[1] + "),Composite(AA.AuId=" + item + "))";
    var attributes = "Id";
    var count  = 1000;
    ```
