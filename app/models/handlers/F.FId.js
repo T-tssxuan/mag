@@ -11,6 +11,12 @@ var adatper = {
     'AA.AuId': []
 }
 
+var offsets = [];
+
+for (var i = 0; i < 10; i++) {
+    offsets.push(i * 10000);
+}
+
 /**
  * Search the path with given basePath
  *
@@ -80,19 +86,25 @@ function searchPath(reqInfo, reqDetail, result, basePath, cbFunc) {
                 async.each(basePath, function(item, finish) {
                     var expr = "And(Composite(F.FId="+ item +"),RId="+reqDetail.value[1]+")";
                     var attributes = "Id";
-                    var count = 100000;
+                    var count = 10000;
 
-                    //make url
-                    var url = magUrlMake(expr, attributes, count);
+                    async.each(offsets, function(offs, next){
+                        //make url
+                        var url = magUrlMake(expr, attributes, count, offs);
 
-                    //send request
-                    if(url){
-                        handle_3_hop_result(url, reqInfo, item, result, reqDetail, finish);
-                    }
-                    else{
-                        error="F.FId->Id->Id get URL error: url is null!";
-                        finish(null);//do not send error
-                    }
+                        //send request
+                        if(url){
+                            handle_3_hop_result(url, reqInfo, item, result, reqDetail, next);
+                        }
+                        else{
+                            error="F.FId->Id->Id get URL error: url is null!";
+                            next(null);//do not send error
+                        }
+                    },
+                    function(err){
+                        finish(null);
+                    });
+                    
                 }, 
                 function(err) {
                     callback(err)
@@ -192,6 +204,6 @@ function handle_3_hop_result(url, reqInfo, basePath_i, result, reqDetail, callba
             }
         }
         callback(null);
-    });
+    },0,1);
     
 }
