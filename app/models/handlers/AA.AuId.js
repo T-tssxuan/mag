@@ -36,7 +36,7 @@ function searchPath(reqInfo, reqDetail, result, basePath, cbFunc) {
                 tadaRequest(url, reqInfo, function(err, data) {
                     if (!err) {
                         for (var i = 0; i < data.length; i++) {
-                            for (var j = 0; j < data[i].AA.length; j++) {
+                            for (var j = 0; data[i].AA && j < data[i].AA.length; j++) {
                                 if (data[i].AA[j].AuId == reqDetail.value[1] 
                                     && data[i].AA[j].AfId) {
                                     afidHash[data[i].AA[j].AfId] = reqDetail.value[1];
@@ -54,7 +54,7 @@ function searchPath(reqInfo, reqDetail, result, basePath, cbFunc) {
                         if (!err) {
                             var afidSet = new Set();
                             for (var i = 0; i < data.length; i++) {
-                                for (var j = 0; j < data[i].AA.length; j++) {
+                                for (var j = 0; data[i].AA && j < data[i].AA.length; j++) {
                                     if (data[i].AA[j].AuId == item 
                                         && data[i].AA[j].AfId) {
                                         afidSet.add(data[i].AA[j].AfId);
@@ -115,7 +115,7 @@ function searchPath(reqInfo, reqDetail, result, basePath, cbFunc) {
             tadaRequest(url, reqInfo, function(err, data) {
                 if (!err && data.length > 0) {
                     var auidHash = [];
-                    for (var i = 0; i < data[0].AA.length; i++) {
+                    for (var i = 0; data[0].AA && i < data[0].AA.length; i++) {
                         auidHash[data[0].AA[i].AuId] = reqDetail.value[1];
                     }
                     for (var i = 0; i < basePath.length; i++) {
