@@ -5,7 +5,9 @@ var log = log4js.getLogger('prerequest');
 var async = require('async');
 
 function makeUrls(id1, id2) {
+    // generate urls for split RId request 
     var genUrls = [];
+
     // for 3-hop (Id, AA.AuId)->Id->Id->Id
     for (var i = 0; i < 20; i++) {
         var tmp = mapUrlMake('RId=' + id2, 'Id', 10000, i * 10000);
