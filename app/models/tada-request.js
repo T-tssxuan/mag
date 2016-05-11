@@ -17,6 +17,10 @@ var processing = 0;
  * @param {Integer} maxTry Optional
  */
 var tadaRequest = function (url, info, callback, maxTry, wait) {
+    if (info.urlCache[url]) {
+        log.info('cache hit url: ' + url);
+        return callback(null, info.urlCache[url]);
+    }
     var tryTime = maxTry || 10000;
     log.info('processing: ' + processing + ' MAXRequest: ' + MAXRequest + 
              ' queue len: ' + queue.length);
@@ -28,10 +32,10 @@ var tadaRequest = function (url, info, callback, maxTry, wait) {
     if (wait) {
         log.warn('url: ' + url)
         log.warn('wait: ' + wait);
-        timeout *= 2;
+        timeout += 500;
     }
     processing++;
-    request.get(url, {timeout: timeout}, function (error, response, body) {
+    request.get(url, function (error, response, body) {
         processing--;
         if (!error && response.statusCode == 200) {
             // if successed parse the data and invoke the callback function

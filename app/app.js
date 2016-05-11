@@ -33,8 +33,7 @@ app.get('/', function (req, res) {
         var h = new Handler(delayChecker.getDelay(),
                             req.query.id1,
                             req.query.id2,
-                            res,
-                            cache
+                            res
                            );
         h.start();
     }
