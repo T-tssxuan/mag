@@ -125,6 +125,9 @@ function searchPath(reqInfo, reqDetail, result, basePath, cbFunc) {
                     }
                 });
             }
+            else{
+                callback(null);
+            }
         }
     ], function(err) {
         cbFunc(err);
