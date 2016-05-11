@@ -9,12 +9,22 @@ var log = log4js.getLogger('crawler');
 var async = require('async');
 
 var seds = [Number(process.argv[2]) || 2100837269]; 
-var testNumber = Number(process.argv[3]) || 500;
+for (var i = 3; i < process.argv.length - 1; i++) {
+    seds.push(Number(process.argv[i]));
+}
+var testNumber = 500;
+if (process.argv.length >= 4) {
+    testNumber = Number(process.argv[process.argv.length - 1]);
+}
+
+log.info(seds);
+log.info("testNumber: " +  testNumber)
 
 var baseUrl = "https://oxfordhk.azure-api.net/academic/v1.0/evaluate?";
 var magKey = "&subscription-key=f7cc29509a8443c5b3a5e56b0e38b5a6";
 
 var apiUrl = 'http://tada.chinacloudapp.cn:3000/?';
+// var apiUrl = 'http://localhost:3000/?';
 
 /**
  * Generate test case pair
@@ -127,20 +137,35 @@ function beginTest() {
     ], function(err, result) {
         log.warn('total: ' + testNumber); 
         if (statistic.len.length > 0) {
-            var maxLen = 0;
+            var lenNum = statistic.len.length;
+            statistic.len.sort(function(a, b) { return a - b;});
             var averageLen = statistic.len.reduce(function(pre, cur) {
-                maxLen = maxLen > cur? maxLen : cur;
                 return pre + cur;
             }) / statistic.len.length;
 
-            var maxElapse = 0;
+            log.warn('Length avg: ' + averageLen);
+            log.warn('80% len: ' + statistic.len[Math.floor(lenNum * 0.80)]);
+            log.warn('85% len: ' + statistic.len[Math.floor(lenNum * 0.85)]);
+            log.warn('90% len: ' + statistic.len[Math.floor(lenNum * 0.90)]);
+            log.warn('95% len: ' + statistic.len[Math.floor(lenNum * 0.95)]);
+            log.warn('97% len: ' + statistic.len[Math.floor(lenNum * 0.97)]);
+            log.warn('99% len: ' + statistic.len[Math.floor(lenNum * 0.99)]);
+            log.warn('max len: ' + statistic.len[lenNum - 1]);
+
+            var elapseNum = statistic.elapse.length;
+            statistic.elapse.sort(function(a, b) { return a - b;});
             var averageElapse = statistic.elapse.reduce(function(pre, cur) {
-                maxElapse = maxElapse > cur? maxElapse : cur;
                 return pre + cur;
             }) / statistic.elapse.length;
 
-            log.warn('Length avg: ' + averageLen + ' max: ' + maxLen);
-            log.warn('Elapse avg: ' + averageElapse + ' max: ' + maxElapse);
+            log.warn('Elapse avg: ' + averageElapse);
+            log.warn('80% elapse: ' + statistic.elapse[Math.floor(elapseNum * 0.80)]);
+            log.warn('85% elapse: ' + statistic.elapse[Math.floor(elapseNum * 0.85)]);
+            log.warn('90% elapse: ' + statistic.elapse[Math.floor(elapseNum * 0.90)]);
+            log.warn('95% elapse: ' + statistic.elapse[Math.floor(elapseNum * 0.95)]);
+            log.warn('97% elapse: ' + statistic.elapse[Math.floor(elapseNum * 0.97)]);
+            log.warn('99% elapse: ' + statistic.elapse[Math.floor(elapseNum * 0.99)]);
+            log.warn('max elapse: ' + statistic.elapse[elapseNum - 1]);
         }
     });
 }
