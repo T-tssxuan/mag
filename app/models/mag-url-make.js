@@ -2,7 +2,7 @@
 var log4js = require("log4js");
 var log = log4js.getLogger('magUrlMake');
 
-var baseUrl = "https://oxfordhk.azure-api.net/academic/v1.0/evaluate?";
+var baseUrl = "http://oxfordhk.azure-api.net/academic/v1.0/evaluate?";
 var magKey = "&subscription-key=f7cc29509a8443c5b3a5e56b0e38b5a6";
 
 /**
