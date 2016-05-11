@@ -1,3 +1,8 @@
+/**
+ * Note:
+ *     node statistic.js sed_id number_of_test_case
+ * 通过提供初始id，以及测试case来开始测式，不提供参数则使用默认参数
+ */
 var request = require('request');
 var log4js = require('log4js');
 var log = log4js.getLogger('crawler');
@@ -9,8 +14,14 @@ var testNumber = Number(process.argv[3]) || 500;
 var baseUrl = "https://oxfordhk.azure-api.net/academic/v1.0/evaluate?";
 var magKey = "&subscription-key=f7cc29509a8443c5b3a5e56b0e38b5a6";
 
-var apiUrl = 'http://localhost:3000/?';
+var apiUrl = 'http://tada.chinacloudapp.cn:3000/?';
 
+/**
+ * Generate test case pair
+ *
+ * @param {Array} testPair
+ * @param {Function} callback
+ */
 function genTestPair(testPair, callback) {
     if (seds.length <= 0 || testPair.length >= testNumber) {
         return callback(null);
@@ -62,6 +73,13 @@ function genTestPair(testPair, callback) {
     });
 }
 
+/**
+ * Begin next test case
+ *
+ * @param {Array} testPair
+ * @param {Obj} statistic
+ * @param {callback} callback
+ */
 function nextTest(testPair, statistic, callback) {
     if (testPair.length <= 0) {
         return callback(null);
@@ -88,6 +106,9 @@ function nextTest(testPair, statistic, callback) {
     });
 }
 
+/**
+ * Begin the test case.
+ */
 function beginTest() {
     var testPair = [];
     var statistic = {
