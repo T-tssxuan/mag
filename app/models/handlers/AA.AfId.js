@@ -195,9 +195,9 @@ function generateOrReq(AuIds, AfId)
 
     var expr = 'Composite(And(AA.AfId='+AfId+',AA.AuId='+AuIds[0]+'))';
     for (var i = 1; i < AuIds.length; i++) {
-        if (expr.length + 50 < maxLen) {
+        if (expr.length + 50 < SPACE) {
             expr = 'Or(' + expr + ',';
-            expr += 'Composite(And(AA.AfId=' + AfId + ',AA.AuId=' + AuIds[i] + '))';
+            expr += 'Composite(And(AA.AfId=' + AfId + ',AA.AuId=' + AuIds[i] + ')))';
         } else {
             results.push(expr);
             expr += 'Composite(And(AA.AfId=' + AfId + ',AA.AuId=' + AuIds[i] + '))';
