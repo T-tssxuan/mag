@@ -11,6 +11,10 @@ var adatper = {
     'AA.AuId': []
 }
 
+var offsets = [];
+
+
+
 /**
  * Search the path with given basePath
  *
@@ -76,30 +80,54 @@ function searchPath(reqInfo, reqDetail, result, basePath, cbFunc) {
         function(callback) {
             // F.FId->Id->Id
             log.debug("start to Search Path F.FId->Id->Id");
-            if(reqDetail.desc[1]=="Id"){
-                async.each(basePath, function(item, finish) {
-                    var expr = "And(Composite(F.FId="+ item +"),RId="+reqDetail.value[1]+")";
-                    var attributes = "Id";
-                    var count = 100000;
+            if(reqDetail.desc[1]=="Id")
+            {
+                var expr = "Id="+reqDetail.value[1];
+                var attributes = "CC";
+                var count = 1;
+                
+                //make url
+                var url = magUrlMake(expr, attributes, count);
 
-                    //make url
-                    var url = magUrlMake(expr, attributes, count);
+                tadaRequest(url, reqInfo, function(err, data){
+                    if(!err && data.length>0)
+                    {
+                        var CC = data[0].CC;
+                        if(CC && CC>10000){
+                            for (var i = 0; i*10000 < CC; i++) {
+                                offsets.push(i * 10000);
+                            }
+                            handle_3_hop_splitRId(reqInfo, basePath, result, reqDetail, callback);
+                        }
+                        else{
+                            async.each(basePath, function(item, finish){
+                                var expr = "And(Composite(F.FId="+ item +"),RId="+reqDetail.value[1]+")";
+                                var attributes = "Id";
+                                var count = 11000;
+                                var url = magUrlMake(expr, attributes, count);
 
-                    //send request
-                    if(url){
-                        handle_3_hop_result(url, reqInfo, item, result, reqDetail, finish);
+                                //send request
+                                if(url){
+                                    handle_3_hop_result(url, reqInfo, item, result, reqDetail, finish);
+                                }
+                                else{
+                                    error="F.FId->Id->Id get URL error: url is null!";
+                                    finish(null);//do not send error
+                                }
+                            },
+                            function(err){
+                                callback(null);
+                            });
+                        }
                     }
                     else{
-                        error="F.FId->Id->Id get URL error: url is null!";
-                        finish(null);//do not send error
+                        callback(null);
                     }
-                }, 
-                function(err) {
-                    callback(err)
                 });
-            } else {
+            }
+            else{
                 callback(null);
-            } 
+            }
         }
     ], function(err) {
         cbFunc(err);
@@ -192,6 +220,38 @@ function handle_3_hop_result(url, reqInfo, basePath_i, result, reqDetail, callba
             }
         }
         callback(null);
-    });
-    
+    },0,1);
+}
+
+function handle_3_hop_splitRId(reqInfo, basePath, result, reqDetail, callback){
+    if(reqDetail.desc[1]=="Id"){
+        async.each(basePath, function(item, finish) {
+            var expr = "And(Composite(F.FId="+ item +"),RId="+reqDetail.value[1]+")";
+            var attributes = "Id";
+            var count = 10000;
+
+            async.each(offsets, function(offs, next){
+                //make url
+                var url = magUrlMake(expr, attributes, count, offs);
+
+                //send request
+                if(url){
+                    handle_3_hop_result(url, reqInfo, item, result, reqDetail, next);
+                }
+                else{
+                    error="F.FId->Id->Id get URL error: url is null!";
+                    next(null);//do not send error
+                }
+            },
+            function(err){
+                finish(null);
+            });
+            
+        }, 
+        function(err) {
+            callback(err)
+        });
+    } else {
+        callback(null);
+    } 
 }

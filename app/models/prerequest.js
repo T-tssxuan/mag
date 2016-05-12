@@ -70,7 +70,7 @@ function makeUrls(id1, id2) {
         },
         // for id2
         {
-            'base': mapUrlMake('Id=' + id2, 'AA.AuId,J.JId,C.CId,F.FId'),
+            'base': mapUrlMake('Id=' + id2, 'AA.AuId,J.JId,C.CId,F.FId,CC'),
             'mapUrl': [
                 // luoxuan
                 // for 3-hop (Id, AA.AuId)->Id->(AA.AuId,J.JId,C.CId,F.FId)->Id
@@ -85,6 +85,9 @@ function makeUrls(id1, id2) {
                 mapUrlMake('Id=' + id2, 'C.CId', 1),
                 // for F.FId->Id
                 mapUrlMake('Id=' + id2, 'F.FId', 100),
+
+                // for CC
+                mapUrlMake('Id=' + id2, 'CC', 1)
             ],
         }
     ];
