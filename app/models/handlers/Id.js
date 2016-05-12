@@ -19,7 +19,6 @@ for (var i = 0; i < 20; i++) {
     offsets.push(i * 10000);
 }
 
-
 /*
  * search Path Id->RId->RId or Id->RId->RId->AuId
  *
@@ -29,122 +28,128 @@ for (var i = 0; i < 20; i++) {
  * @param {Number} Id
  * @param {Function} callback
  */
-function searchPath5(reqInfo, reqDetail, result, Ids, callback) {
+function searchPathMain(reqInfo, reqDetail, result, ids, callback) {
     log.debug('Search Path: Id->RId->RId->*');
     var Id1 = reqDetail.value[0];
     var Id2 = reqDetail.value[1];
-    // var expr = '';
-    // if (reqDetail.desc[1] == 'Id') {
-    //     // search Id->RId->RId(->RId) 2-hop and 3-hop
-    //     expr = 'RId=' + Id2;
-    // } else {
-    //     // search RId->RId->RId->AA.AuId 3-hop
-    //     expr = 'Composite(AA.AuId=' + Id2 + ')';
-    // }
+    var idData = [];
+    var auidData = [];
+    var ridData = [];
+    var lastIdData = [];
     async.parallel([
-        function(finish) {
-            var elements = [];
-            async.each(Ids, function(item, next) {
-                var url = magUrlMake('Id=' + item, 'RId');
+        function(next) {
+            // Get all Id->RId the RId infomation
+            var orExpr = generateOrExpr('Id', ids, 0);
+            var attribute = 'AA.AuId,J.JId,C.CId,F.FId,RId,Id';
+            async.each(orExpr, function(item, finish) {
+                var url = magUrlMake(item, attribute, ids.length);
                 tadaRequest(url, reqInfo, function(err, data) {
-                    if (!err && data.length > 0 && data[0]['RId']) {
-                        if (reqDetail.desc[1] == 'Id'
-                            && data[0]['RId'].indexOf(Id2) != -1) {
-                            result.push([Id1, item, Id2]);
+                    if (!err && data.length > 0) {
+                        idData = idData.concat(data);
+                        // Generate the 'Id->RId->RId'
+                        if (reqDetail.desc[1] == 'Id') {
+                            for (var i = 0; i < data.length; i++) {
+                                if (data[i]['RId'] 
+                                    && data[i]['RId'].indexOf(Id2) != -1) {
+                                    result.push([Id1, data[i]['Id'], Id2]);
+                                }
+                            }
                         }
-                        elements.push([item, data[0]['RId']]);
                     }
-                    next(null);
+                    finish(null);
                 });
-            }, function() {
-                finish(null, elements);
+            }, function(err) {
+                next(null);
             });
         },
-        function(finish) {
-            var expr = '';
+        function(next) {
+            // Id->Id->Id->AA.AuId
             if (reqDetail.desc[1] == 'AA.AuId') {
-                expr = 'Composite(AA.AuId=' + Id2 + ')';
+                var expr = 'Composite(AA.AuId=' + Id2 + ')';
                 var url = magUrlMake(expr, 'Id', 10000);
                 tadaRequest(url, reqInfo, function(err, data) {
                     if (!err && data.length > 0) {
-                        finish(null, data);
-                    } else {
-                        finish(null, []);
+                        auidData = data;
                     }
+                    next(null);
                 });
             } else {
-                expr = 'RId=' + Id2;
-                var result = [];
-                async.each(offsets, function(item, next) {
-                    log.info('item: ' + item);
+                next(null);
+            }
+        }, 
+        function(next) {
+            // Id->Id->Id->Id
+            if (reqDetail.desc[1] == 'Id') {
+                async.each(offsets, function(item, finish) {
+                    var expr = 'RId=' + Id2;
                     var url = magUrlMake(expr, 'Id' , 10000, item);
                     tadaRequest(url, reqInfo, function(err, data) {
                         if (!err && data.length > 0) {
-                            result = result.concat(data);
+                            ridData = ridData.concat(data);
                         }
-                        next(null);
+                        finish(null);
                     }, 0, 1);
                 }, function(err) {
-                    finish(null, result);
+                    next(null);
                 });
+            } else {
+                next(null);
+            }
+        },
+        function(next) {
+            // Id->Id->(J.JId,C.CId,F.FId,AA.AuId)->Id
+            if (reqDetail.desc[1] == 'Id') {
+                var attribute = 'AA.AuId,J.JId,C.CId,F.FId';
+                var expr = 'Id=' + reqDetail.value[1];
+                var url = magUrlMake(expr, attribute);
+                tadaRequest(url, reqInfo, function(err, data) {
+                    if (!err && data.length > 0) {
+                        lastIdData = data;
+                    }
+                    next(null);
+                });
+            } else {
+                next(null);
             }
         }
-    ], function(err, data) {
-        if (data[0].length <= 0 || data[1].length <= 0) {
-            return callback(null);
-        } 
-        var map = {};
-        for (var i = 0; i < data[1].length; i++) {
-            map[data[1][i]['Id']] = 1;
+    ], function() {
+        if (reqDetail.desc[1] == 'Id') {
+            process1(reqDetail, result, ridData, idData);
+            process2(reqDetail, result, lastIdData, idData);
+        } else {
+            process1(reqDetail, result, auidData, idData);
         }
-        for (var i = 0; i < data[0].length; i++) {
-            for (var j = 0; j < data[0][i][1].length; j++) {
-                if (map[data[0][i][1][j]]) {
-                    result.push([Id1, data[0][i][0], data[0][i][1][j], Id2]);
-                }
-            }
-        }
-        log.debug('size: ' + result.length);
         callback(null);
     });
 }
 
-function process3Hop(reqInfo, reqDetail, result, ids, callback) {
-    var attribute = 'AA.AuId,J.JId,C.CId,F.FId';
-    async.parallel([
-        function(finish) {
-            var idsData = [];
-            async.each(ids, function(item, next) {
-                var expr = 'Id=' + item;
-                var url = magUrlMake(expr, attribute);
-                tadaRequest(url, reqInfo, function(err, data) {
-                    if (!err && data.length > 0) {
-                        idsData.push([item, data[0]]);
-                    }
-                    next(null);
-                });
-            }, function(err) {
-                finish(null, idsData);
-            });
-        }, 
-        function(finish) {
-            var expr = 'Id=' + reqDetail.value[1];
-            var url = magUrlMake(expr, attribute);
-            tadaRequest(url, reqInfo, function(err, data) {
-                if (!err && data.length > 0) {
-                    finish(null, data[0]);
-                } else {
-                    finish(null, null);
-                }
-            });
+// Id->Id->Id->AA.AuId
+// Id->Id->Id-Id
+function process1(reqDetail, result, data, idData) {
+    var map = {};
+    for (var i = 0; i < data.length; i++) {
+        map[data[i]['Id']] = 1;
+    }
+    for (var i = 0; i < idData.length; i++) {
+        for (var j = 0; j < idData[i]['RId'].length; j++) {
+            if (map[idData[i]['RId'][j]]) {
+                result.push([
+                    reqDetail.value[0],
+                    idData[i]['Id'],
+                    idData[i]['RId'][j],
+                    reqDetail.value[1]
+                ]);
+            }
         }
-    ], function(err, data) {
-        processAuFId(result, reqDetail, data[0], data[1], 'AA', 'AuId');
-        processAuFId(result, reqDetail, data[0], data[1], 'F', 'FId');
-        processJCId(result, reqDetail, data[0], data[1], 'J', 'JId');
-        processJCId(result, reqDetail, data[0], data[1], 'C', 'CId');
-        callback(null);
-    });
+    }
+}
+
+// Id->Id->(J.JId,C.CId,F.FId,AA.AuId)->Id
+function process2(reqDetail, result, lastIdData, idData) {
+    processAuFId(result, reqDetail, idData, lastIdData[0], 'AA', 'AuId');
+    processAuFId(result, reqDetail, idData, lastIdData[0], 'F', 'FId');
+    processJCId(result, reqDetail, idData, lastIdData[0], 'J', 'JId');
+    processJCId(result, reqDetail, idData, lastIdData[0], 'C', 'CId');
 }
 
 function processAuFId(result, reqDetail, from, to, field1, field2) {
@@ -156,15 +161,15 @@ function processAuFId(result, reqDetail, from, to, field1, field2) {
         map[to[field1][i][field2]] = 1;
     }
     for (var i = 0; i < from.length; i++) {
-        if (!from[i][1][field1]) {
+        if (!from[i][field1]) {
             continue;
         }
-        for (var j = 0; j < from[i][1][field1].length; j++) {
-            if (map[from[i][1][field1][j][field2]]) {
+        for (var j = 0; j < from[i][field1].length; j++) {
+            if (map[from[i][field1][j][field2]]) {
                 result.push([
                     reqDetail.value[0],
-                    from[i][0],
-                    from[i][1][field1][j][field2],
+                    from[i]['Id'],
+                    from[i][field1][j][field2],
                     reqDetail.value[1]
                 ]);
             }
@@ -177,14 +182,14 @@ function processJCId(result, reqDetail, from, to, field1, field2) {
         return;
     }
     for (var i = 0; i < from.length; i++) {
-        if (!from[i][1][field1]) {
+        if (!from[i][field1]) {
             continue;
         }
-        if (from[i][1][field1][field2] == to[field1][field2]) {
+        if (from[i][field1][field2] == to[field1][field2]) {
             result.push([
                 reqDetail.value[0],
-                from[i][0],
-                from[i][1][field1][field2],
+                from[i]['Id'],
+                from[i][field1][field2],
                 reqDetail.value[1]
             ]);
         }
@@ -217,15 +222,10 @@ function process2Hop(reqInfo, reqDetail, result, ids, callback) {
 function searchPath(reqInfo, reqDetail, result, basePath, cbFunc) {
     async.parallel([
         function(callback) {
-            if (reqDetail.desc[1] == 'AA.AuId') {
-                process2Hop(reqInfo, reqDetail, result, basePath, callback);
-            } else {
-                process3Hop(reqInfo, reqDetail, result, basePath, callback);
-            }
+            process2Hop(reqInfo, reqDetail, result, basePath, callback);
         },
         function(callback) {
-            // Id->RId->RId->(AA.AuId, Id)
-            searchPath5(reqInfo, reqDetail, result, basePath, callback);
+            searchPathMain(reqInfo, reqDetail, result, basePath, callback);
         }
     ], function(err) {
         cbFunc(err);
@@ -243,6 +243,7 @@ function searchPath(reqInfo, reqDetail, result, basePath, cbFunc) {
 module.exports = function(reqInfo, reqDetail, result, basePath, cbFunc) {
     // return cbFunc();
     // Before search path check whether this module suitable for query pair
+    log.info('Id.js');
     if (adatper[reqDetail.desc[0]].indexOf(reqDetail.desc[1]) == -1) {
         cbFunc();
     } else {
