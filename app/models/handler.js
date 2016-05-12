@@ -141,6 +141,9 @@ Handler.prototype.startSearch = function() {
 
 Handler.prototype.processSubPath = function(field, elements, callback) {
     log.debug('field: ' + field + ' elements: ' + JSON.stringify(elements));
+    if (elements.length == 0) {
+        return callback(null);
+    }
     subHandlers[field](
         this.reqInfo,
         this.reqDetail,
