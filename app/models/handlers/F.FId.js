@@ -25,30 +25,6 @@ var offsets = [];
  */
 function searchPath(reqInfo, reqDetail, result, basePath, cbFunc) {
     async.parallel([
-        function(callback){
-            //F.FId->Id
-            log.debug("start to Search Path F.FId->Id");
-            if(reqDetail.desc[1]=="Id")
-            {
-                //request param
-                var expr = "Id="+reqDetail.value[1];
-                var attributes = "F.FId";
-                var count = 100;
-                //make url
-                var url = magUrlMake(expr, attributes, count);
-                //send request
-                if(url){
-                    handle_2_hop_result(url, reqInfo, basePath, result, reqDetail, callback);
-                }
-                else{
-                    error="F.FId->Id get URL error: url is null!";
-                    callback(null);//not callback error
-                }
-            }
-            else{
-                callback(null);
-            }//if not, exit immediately
-        },
         function(callback) {
             // F.FId->Id->AA.AuId
             log.debug("start to Search Path F.FId->Id->AA.AuId");
@@ -86,7 +62,7 @@ function searchPath(reqInfo, reqDetail, result, basePath, cbFunc) {
             if(reqDetail.desc[1]=="Id")
             {
                 var expr = "Id="+reqDetail.value[1];
-                var attributes = "CC";
+                var attributes = "F.FId,CC";
                 var count = 1;
                 
                 //make url
@@ -95,6 +71,8 @@ function searchPath(reqInfo, reqDetail, result, basePath, cbFunc) {
                 tadaRequest(url, reqInfo, function(err, data){
                     if(!err && data.length>0)
                     {
+                        handle_2_hop_result(basePath, result, reqDetail, data);
+                        
                         var CC = data[0].CC;
                         if(CC && CC>10000){
                             for (var i = 0; i*10000 < CC; i++) {
@@ -164,9 +142,8 @@ module.exports = function(reqInfo, reqDetail, result, basePath, cbFunc) {
  * @param {Object} reqDetail the infomation about the query pair
  * @param {Function} callback
  */
-function handle_2_hop_result(url, reqInfo, basePath, result, reqDetail, callback) {
-    tadaRequest(url, reqInfo, function(err, data) {
-        if(!err && data.length>0){
+function handle_2_hop_result(basePath, result, reqDetail, data) {
+        if(data.length>0){
             var FidsArray = data[0].F;//this array only has one element, get its "F" array
             var FidsStringArray = [];//resultId's F.FId
 
@@ -193,8 +170,6 @@ function handle_2_hop_result(url, reqInfo, basePath, result, reqDetail, callback
                 }
             }       
         }
-        callback(null);
-    });
 }
 
 /**
