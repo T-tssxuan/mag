@@ -35,6 +35,7 @@ var tadaRequest = function (url, info, callback, maxTry, wait) {
         timeout += 500;
     }
     processing++;
+    var beginTime = Date.now();
     request.get(url, function (error, response, body) {
         processing--;
         if (!error && response.statusCode == 200) {
@@ -52,6 +53,7 @@ var tadaRequest = function (url, info, callback, maxTry, wait) {
             } catch(e) {
                 err = e;
             }
+            log.info('request time: ' + (Date.now() - beginTime) + 'ms');
             log.debug('url: ' + url)
             // console.log(JSON.stringify(data));
             callback(err, data);

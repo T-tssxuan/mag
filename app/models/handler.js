@@ -128,32 +128,44 @@ Handler.prototype.getRequestDetail = function() {
     // testField('AA.AuId', this.id2, 'Composite(AA.AuId=' + this.id2 + ')', 2);
 
     var that = this;
-    var testField = function (target, idx, callback) {
+    var testField = function (target, idx, lock, callback) {
         var expr = 'Or(Id=' + target + ',';
         expr += 'Composite(AA.AuId=' + target + '))';
         var url = magUrlMake(expr);
-        log.info('testField url: ' + url);
         tadaRequest(url, that.reqInfo, function(err, data) {
-            if (!err && data.length > 0) {
-                that.reqDetail.value[idx] = target;
-                if (data.length > 1) {
-                    that.reqDetail.desc[idx] = 'AA.AuId';
+            log.info('testField lock: ' + lock.flag);
+            log.info('testField: ' + idx + ' time: ' + Date.now());
+            if (lock.flag == 0) {
+                if (!err && data.length > 0) {
+                    that.reqDetail.value[idx] = target;
+                    if (data.length > 1) {
+                        that.reqDetail.desc[idx] = 'AA.AuId';
+                    } else {
+                        that.reqDetail.desc[idx] = 'Id';
+                    }
+                    callback(null);
                 } else {
-                    that.reqDetail.desc[idx] = 'Id';
+                    callback('error'); 
                 }
-                callback(null);
-            } else {
-                callback('error'); 
+                lock.flag = 1;
             }
         });
     };
 
     async.parallel([
         function(callback) {
-            testField(that.id1, 0, callback);
+            var test1 = {flag: 0};
+            testField(that.id1, 0, test1, callback);
+            setTimeout(function() {
+                testField(that.id1, 0, test1, callback);
+            }, 200);
         },
         function(callback) {
-            testField(that.id2, 1, callback);
+            var test2 = {flag: 0};
+            testField(that.id2, 1, test2, callback);
+            setTimeout(function() {
+                testField(that.id2, 1, test2, callback);
+            }, 200);
         }
     ], function(err) {
         if (err) {
