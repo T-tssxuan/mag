@@ -20,6 +20,7 @@ app.get('/', function (req, res) {
     var beginTime = Date.now();
     var preResSend = res.send;
     var maybeResult = cache.getResult(req.query.id1, req.query.id2);
+    maybeResult = 0;
     if (maybeResult) {
         res.send(maybeResult);
     } else {

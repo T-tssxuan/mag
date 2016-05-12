@@ -9,7 +9,7 @@ function makeUrls(id1, id2) {
     var genUrls = [];
 
     // for 3-hop (Id, AA.AuId)->Id->Id->Id
-    for (var i = 0; i < 20; i++) {
+    for (var i = 0; i < 1; i++) {
         var tmp = mapUrlMake('RId=' + id2, 'Id', 10000, i * 10000);
         var obj = {};
         obj['base'] = tmp;

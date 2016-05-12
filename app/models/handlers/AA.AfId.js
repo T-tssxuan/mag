@@ -147,29 +147,33 @@ function handle_3_hop_result(url, reqInfo, basePath, result, reqDetail, callback
             if(!data)
                 return callback(null);
             var resultAuId = [];
-
             //get targetId's AuId
             for(var i = 0; i < data.length; i++){
                 resultAuId[i] = data[i].AuId;
             }
 
-            //send each targetId's AuId to get their AfId
-            async.each(resultAuId, function(item, finish){
-                var expr = "Composite(AA.AuId="+item+")";
+            async.each(basePath, function(item, finish){
+                
+                //generate or request
+                var orExpr = generateOrReq(resultAuId, item);
                 var attributes = "AA.AuId,AA.AfId";
                 var count = 1000;
 
-                //make url
-                var url = magUrlMake(expr, attributes, count); 
-
-                if(url){
-                    handle_AfId(url, reqInfo, item, basePath, result, reqDetail, finish);
-                }
-                else{
-                    error = "AfId->AuId->Id get url null!";
-                    finish(null);
-                }
-
+                async.each(orExpr, function(expr, next){
+                    //make url
+                    var url = magUrlMake(expr, attributes, count);
+                    log.debug("send request:"+url);
+                    if(url){
+                        handle_AfId(url, reqInfo, item, resultAuId, result, reqDetail, next);
+                    }
+                    else{
+                        error = "AfId->AuId->Id get url null!";
+                        next(null);
+                    }
+                },
+                function(err){
+                    finish(err);
+                });
             },
             function(err){
                 callback(null);
@@ -182,34 +186,57 @@ function handle_3_hop_result(url, reqInfo, basePath, result, reqDetail, callback
     });   
 }
 
-function handle_AfId(url, reqInfo, item, basePath, result, reqDetail, callback)
+function generateOrReq(AuIds, AfId)
+{
+    var baseUrl = "http://oxfordhk.azure-api.net/academic/v1.0/evaluate?";
+    var magKey = "&subscription-key=f7cc29509a8443c5b3a5e56b0e38b5a6";
+    var SPACE = 2048 - baseUrl.length - magKey.length - 100;
+    var result = [];
+
+    var expr = 'Composite(And(AA.AfId='+AfId+',AA.AuId='+AuIds[0]+'))';
+    for (var i = 1; i < AuIds.length; i++) {
+        if (expr.length + 50 < SPACE) {
+            expr = 'Or(' + expr + ',';
+            expr += 'Composite(And(AA.AfId=' + AfId + ',AA.AuId=' + AuIds[i] + ')))';
+        } else {
+            results.push(expr);
+            expr += 'Composite(And(AA.AfId=' + AfId + ',AA.AuId=' + AuIds[i] + '))';
+        }
+    }
+    result.push(expr);
+    return result;
+}
+
+function handle_AfId(url, reqInfo, AfId, AuIds, result, reqDetail, callback)
 {
     tadaRequest(url, reqInfo, function(err, data){
+        
         if(!err && data.length>0){
-            //find all AfId of item
-            var hashTable = {};
-            for(var i=0;i<data.length;i++){
+            //turn AuIds into hashtable
+            var AuIdsTable = {};
+            var tempTable = {};//store author has found
+            for(var i = 0;i < AuIds.length;i++){
+                AuIdsTable[AuIds[i]] = 1;
+            }
+            
+            log.debug(JSON.stringify(data));
+
+            for(var i = 0;i < data.length;i++)
+            {
                 var AA = data[i].AA;
-                if(!AA)
-                    continue;
-                for(var j = 0;j<AA.length;j++)
-                {
-                    if(AA[j].AuId==item && AA[j].AfId){
-                        //found item's AfId 
-                        hashTable[AA[j].AfId] = 1;
+                if(AA){
+                    for(var j = 0;j < AA.length;j++){
+                        if(AA[j].AuId in AuIdsTable && !(AA[j].AuId in tempTable)){
+                            //found a path
+                            var path = [reqDetail.value[0], AfId, AA[j].AuId, reqDetail.value[1]];
+                            log.debug("AA.AfId->AA.AuId->Id found a path!!");
+                            result.push(path);
+                            tempTable[AA[j].AuId] = 1;
+                        }
                     }
                 }
             }
-
-            /*find intersection of basePath and item's AfIds*/
-            for(var i = 0; i<basePath.length ;i++){
-                if(basePath[i] in hashTable){
-                    //found a 3-hop path
-                    var path = [reqDetail.value[0], basePath[i], item, reqDetail.value[1]];
-                    //log.debug("found 3-hop(AA.AuId->AA.AfId->AA.AuId->Id) result:"+path);
-                    result.push(path);
-                }
-            }
+            
         }
         callback(null);
     });

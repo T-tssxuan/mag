@@ -42,38 +42,27 @@ function searchPath(reqInfo, reqDetail, result, basePath, cbFunc) {
             });
         },
         function(callback) {
-            // J.JId->Id(Id)
+            // J.JId->Id->RId 2-hop and 3-hop
             if (reqDetail.desc[1] != "Id") {
                 return callback(null);
             }
-            var expr = "And(Id=" + reqDetail.value[1];
-            expr += ",Composite(J.JId=" + basePath[0] +"))";
-            var url = magUrlMake(expr, "", limit);
-            tadaRequest(url, reqInfo, function(err, data) {
-                if (!err && data.length > 0) {
-                    result.push([reqDetail.value[0], basePath[0], 
-                        reqDetail.value[1]]);
-                }
-                callback(null);
-            });            
-        },
-        function(callback) {
-            // J.JId->Id->RId(Id)
-            if (reqDetail.desc[1] != "Id") {
-                return callback(null);
-            }
-            var expr = "And(RId=" + reqDetail.value[1];
-            expr += ",Composite(J.JId=" + basePath[0] +"))";
+            var expr = "And(Composite(J.JId=" + basePath[0] + "),Or(Id=";
+            expr += reqDetail.value[1] + ",RId=" + reqDetail.value[1] + "))";
             var url = magUrlMake(expr, "Id", limit);
             tadaRequest(url, reqInfo, function(err, data) {
                 if (!err) {
                     for (var i = 0; i < data.length; i++) {
-                        result.push([reqDetail.value[0], basePath[0], 
-                            data[i].Id, reqDetail.value[1]]);
+                        if (data[i].Id ==  reqDetail.value[1]) {
+                            result.push([reqDetail.value[0], basePath[0], 
+                                reqDetail.value[1]]);
+                        } else {
+                            result.push([reqDetail.value[0], basePath[0], 
+                                data[i].Id, reqDetail.value[1]]);
+                        }
                     }
                 }
                 callback(null);
-            });
+            });            
         }
     ], function(err) {
         cbFunc(err);
