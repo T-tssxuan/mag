@@ -2,6 +2,7 @@ var log4js = require('log4js');
 var async = require('async');
 var tadaRequest = require('../tada-request');
 var magUrlMake = require('../mag-url-make');
+var generateOrExpr = require('../generate-or-expr');
 
 var log = log4js.getLogger('F.FId');
 
@@ -12,7 +13,6 @@ var adatper = {
 }
 
 var offsets = [];
-
 
 
 /**
@@ -53,9 +53,12 @@ function searchPath(reqInfo, reqDetail, result, basePath, cbFunc) {
             // F.FId->Id->AA.AuId
             log.debug("start to Search Path F.FId->Id->AA.AuId");
             if(reqDetail.desc[1]=="AA.AuId"){
-                async.each(basePath, function(item, finish) {
-                    var expr = "And(Composite(F.FId="+ item +"),Composite(AA.AuId="+reqDetail.value[1]+"))";
-                    var attributes = "Id";
+                var orExpr = generateOrExpr("F.FId", basePath, 35);
+                var tempPathAuidTable = {};
+
+                async.each(orExpr, function(item, finish) {
+                    var expr = "And("+orExpr+",Composite(AA.AuId="+reqDetail.value[1]+"))";
+                    var attributes = "F.FId,Id";
                     var count = 1000;
 
                     //make url
@@ -63,7 +66,7 @@ function searchPath(reqInfo, reqDetail, result, basePath, cbFunc) {
 
                     //send request
                     if(url){
-                        handle_3_hop_result(url, reqInfo, item, result, reqDetail, finish);
+                        handle_3_hop_result(url, reqInfo, basePath, tempPathAuidTable, result, reqDetail, finish);
                     }
                     else{
                         error="F.FId->Id->AA.AuId get URL error: url is null!";
@@ -71,7 +74,7 @@ function searchPath(reqInfo, reqDetail, result, basePath, cbFunc) {
                     }
                 }, 
                 function(err) {
-                    callback(err)
+                    callback(err);
                 });
             } else {
                 callback(null);
@@ -108,7 +111,7 @@ function searchPath(reqInfo, reqDetail, result, basePath, cbFunc) {
 
                                 //send request
                                 if(url){
-                                    handle_3_hop_result(url, reqInfo, item, result, reqDetail, finish);
+                                    handle_3_hop_result_toRid(url, reqInfo, item, result, reqDetail, finish);
                                 }
                                 else{
                                     error="F.FId->Id->Id get URL error: url is null!";
@@ -199,34 +202,64 @@ function handle_2_hop_result(url, reqInfo, basePath, result, reqDetail, callback
  *
  * @param {Object} url request url
  * @param {Object} response data
- * @param {Object} basePath_i ith F.FId from last hop
+ * @param {Array} basePath F.FId from last hop
  * @param {Array} final result set
  * @param {Object} reqDetail the infomation about the query pair
  * @param {Function} callback
  */
-function handle_3_hop_result(url, reqInfo, basePath_i, result, reqDetail, callback){
+function handle_3_hop_result(url, reqInfo, basePath, tempPathAuidTable, result, reqDetail, callback){
     
     tadaRequest(url, reqInfo, function(err, data) {
         if(!err && data.length>0)
         {
-            for(var i=0; i < data.length;i++){
-                var resultId = data[i].Id; 
-                var path = [reqDetail.value[0], basePath_i, resultId, reqDetail.value[1]];
+            var baseTable = {};
+            for(var i = 0;i < basePath.length;i++){
+                baseTable[basePath[i]] = 1;
+            }
 
-                //log.debug("found 3-hop(Id->F.FId->Id->"+reqDetail.desc[1]+") result:"+path);
-                //log.debug(JSON.stringify(result));
-                //add to result set
-                result.push(path);
+            for(var i = 0;i < data.length;i++)
+            {
+                var Id = data[i].Id;
+                var Fids = data[i].F;
+                for(var j = 0;j < Fids.length;j++){
+                    if(Fids[j].FId in baseTable){
+                        //found a path but may be not unique
+                        var tempKey = Id+"*"+Fids[j].FId;
+                        if(!(tempKey in tempPathAuidTable)){
+                            //found a unique path
+                            var path = [reqDetail.value[0], Fids[j].FId, Id, reqDetail.value[1]];
+                            result.push(path);
+                            tempPathAuidTable[tempKey] = 1;
+                        }
+                    }
+                }
             }
         }
         callback(null);
-    },0,1);
+    });
+}
+
+function handle_3_hop_result_toRid(url, reqInfo, basePath_i, result, reqDetail, callback){
+    tadaRequest(url, reqInfo, function(err, data){
+        if(!err && data.length>0){
+            for(var i = 0;i < data.length;i++){
+                var path = [reqDetail.value[0], basePath_i, data[i].Id, reqDetail.value[1]];
+                //log.debug("Id->F.FId->Id->Id found 3-hop result!");
+                result.push(path);   
+            }
+            
+        }
+        callback(null);    
+    });
 }
 
 function handle_3_hop_splitRId(reqInfo, basePath, result, reqDetail, callback){
     if(reqDetail.desc[1]=="Id"){
+        var orExpr = generateOrExpr("F.FId", basePath, 20);
+        var tempPathAuidTable = {};
+
         async.each(basePath, function(item, finish) {
-            var expr = "And(Composite(F.FId="+ item +"),RId="+reqDetail.value[1]+")";
+            var expr = "And("+ orExpr +",RId="+reqDetail.value[1]+")";
             var attributes = "Id";
             var count = 10000;
 
