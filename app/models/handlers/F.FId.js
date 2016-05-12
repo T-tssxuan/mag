@@ -269,7 +269,7 @@ function handle_3_hop_splitRId(reqInfo, basePath, result, reqDetail, callback){
 
                 //send request
                 if(url){
-                    handle_3_hop_result(url, reqInfo, item, result, reqDetail, next);
+                    handle_3_hop_result_toRid(url, reqInfo, item, result, reqDetail, next);
                 }
                 else{
                     error="F.FId->Id->Id get URL error: url is null!";
