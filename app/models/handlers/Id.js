@@ -5,6 +5,8 @@ var magUrlMake = require('../mag-url-make');
 
 var log = log4js.getLogger('Id-RId');
 
+var generateOrExpr = require('../generate-or-expr');
+
 // Using this object to check whether this path app suitable to the query pair
 var adatper = {
     'Id': ['AA.AuId', 'Id'],
