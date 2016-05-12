@@ -76,56 +76,93 @@ function Handler(defaultDelay, id1, id2, res) {
  * All of the subsequent processing is according to the result of this function.
  */
 Handler.prototype.getRequestDetail = function() {
-    var validCount = 0;
-    var testCount = 0;
+    // var validCount = 0;
+    // var testCount = 0;
+    // var that = this;
+
+    // // the field test function, which decide the field of the id according to 
+    // // the number of result can get.
+    // // If there are results in the request, the field is valid.
+    // var testField = function(field, id, expr, pos) {
+    //     var url = magUrlMake(expr, '', 1);
+
+    //     tadaRequest(url, that.reqInfo, function(err, data) {
+    //         log.debug('getRequestDetail: ' + JSON.stringify(data));
+    //         if (!err) {
+    //             // If there is data in this request and has not been set as
+    //             // AA.AuId, we set it.
+    //             // priority of AA.AuId higher than priority of Id
+    //             if (data.length != 0 
+    //                 && that.reqDetail.desc[pos - 1] != 'AA.AuId') {
+    //                 that.reqDetail.value[pos - 1] = id;
+    //                 validCount++;
+    //                 that.reqDetail.desc[pos - 1] = field;
+    //             }
+    //         } else {
+    //             log.info('getRequestDetail: get the error data' + data);
+    //         }
+    //         testCount++;
+    //         
+    //         // At most 4 result
+    //         if (testCount == 4) {
+    //             // check whether get an validate pair
+    //             if (that.reqDetail.desc[0] != '' 
+    //                 && that.reqDetail.desc[1] != '') {
+    //                 log.info('the search is started');
+    //                 log.debug('request detail: '
+    //                           + JSON.stringify(that.reqDetail));
+    //                 that.startSearch();
+    //             } else {
+    //                 // the pair is not valid, need to send empty result
+    //                 log.info('not find valid query pair');
+    //                 that.sendResult();
+    //             }
+    //         }
+    //     }, 10);
+    // }
+
+    // // Test the idx and field
+    // testField('Id', this.id1, 'Id=' + this.id1, 1);
+    // testField('AA.AuId', this.id1, 'Composite(AA.AuId=' + this.id1 + ')', 1);
+    // testField('Id', this.id2, 'Id=' + this.id2, 2);
+    // testField('AA.AuId', this.id2, 'Composite(AA.AuId=' + this.id2 + ')', 2);
+
     var that = this;
-
-    // the field test function, which decide the field of the id according to 
-    // the number of result can get.
-    // If there are results in the request, the field is valid.
-    var testField = function(field, id, expr, pos) {
-        var url = magUrlMake(expr, '', 1);
-
+    var testField = function (target, idx, callback) {
+        var expr = 'Or(Id=' + target + ',';
+        expr += 'Composite(AA.AuId=' + target + '))';
+        var url = magUrlMake(expr);
+        log.info('testField url: ' + url);
         tadaRequest(url, that.reqInfo, function(err, data) {
-            log.debug('getRequestDetail: ' + JSON.stringify(data));
-            if (!err) {
-                // If there is data in this request and has not been set as
-                // AA.AuId, we set it.
-                // priority of AA.AuId higher than priority of Id
-                if (data.length != 0 
-                    && that.reqDetail.desc[pos - 1] != 'AA.AuId') {
-                    that.reqDetail.value[pos - 1] = id;
-                    validCount++;
-                    that.reqDetail.desc[pos - 1] = field;
-                }
-            } else {
-                log.info('getRequestDetail: get the error data' + data);
-            }
-            testCount++;
-            
-            // At most 4 result
-            if (testCount == 4) {
-                // check whether get an validate pair
-                if (that.reqDetail.desc[0] != '' 
-                    && that.reqDetail.desc[1] != '') {
-                    log.info('the search is started');
-                    log.debug('request detail: '
-                              + JSON.stringify(that.reqDetail));
-                    that.startSearch();
+            if (!err && data.length > 0) {
+                that.reqDetail.value[idx] = target;
+                if (data.length > 1) {
+                    that.reqDetail.desc[idx] = 'AA.AuId';
                 } else {
-                    // the pair is not valid, need to send empty result
-                    log.info('not find valid query pair');
-                    that.sendResult();
+                    that.reqDetail.desc[idx] = 'Id';
                 }
+                callback(null);
+            } else {
+                callback('error'); 
             }
-        }, 10);
-    }
+        });
+    };
 
-    // Test the idx and field
-    testField('Id', this.id1, 'Id=' + this.id1, 1);
-    testField('AA.AuId', this.id1, 'Composite(AA.AuId=' + this.id1 + ')', 1);
-    testField('Id', this.id2, 'Id=' + this.id2, 2);
-    testField('AA.AuId', this.id2, 'Composite(AA.AuId=' + this.id2 + ')', 2);
+    async.parallel([
+        function(callback) {
+            testField(that.id1, 0, callback);
+        },
+        function(callback) {
+            testField(that.id2, 1, callback);
+        }
+    ], function(err) {
+        if (err) {
+            that.sendResult();
+        } else {
+            log.info('request detail: ' + JSON.stringify(that.reqDetail));
+            that.startSearch();
+        }
+    });
 }
 
 /**
