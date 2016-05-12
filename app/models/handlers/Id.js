@@ -80,17 +80,30 @@ function searchPathMain(reqInfo, reqDetail, result, ids, callback) {
         function(next) {
             // Id->Id->Id->Id
             if (reqDetail.desc[1] == 'Id') {
-                async.each(offsets, function(item, finish) {
-                    var expr = 'RId=' + Id2;
-                    var url = magUrlMake(expr, 'Id' , 10000, item);
-                    tadaRequest(url, reqInfo, function(err, data) {
-                        if (!err && data.length > 0) {
-                            ridData = ridData.concat(data);
-                        }
-                        finish(null);
-                    }, 0, 1);
-                }, function(err) {
-                    next(null);
+                var url = magUrlMake('Id=' + Id2, 'CC', 1);
+                tadaRequest(url, reqInfo, function(err, data) {
+                    var items = [];
+                    var idx = 20;
+                    if (!err && data.length > 0 
+                        && !Number.isNaN(data[0]['CC'])) {
+                        idx = Math.ceil(data[0]['CC'] / 10000);
+                    }
+                    log.info('items: ' + idx);
+                    for (var i = 0; i < idx; i++) {
+                        items.push(offsets[i]);
+                    }
+                    async.each(items, function(item, finish) {
+                        var expr = 'RId=' + Id2;
+                        var url = magUrlMake(expr, 'Id' , 10000, item);
+                        tadaRequest(url, reqInfo, function(err, data) {
+                            if (!err && data.length > 0) {
+                                ridData = ridData.concat(data);
+                            }
+                            finish(null);
+                        }, 0, 1);
+                    }, function(err) {
+                        next(null);
+                    });
                 });
             } else {
                 next(null);
