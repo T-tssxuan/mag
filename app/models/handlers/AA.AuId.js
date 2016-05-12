@@ -4,6 +4,7 @@ var tadaRequest = require('../tada-request');
 var magUrlMake = require('../mag-url-make');
 
 var log = log4js.getLogger('Id-AA.AuId');
+var generateOrExpr = require('../generate-or-expr');
 
 // Using this object to check whether this path app suitable to the query pair
 var adatper = {
@@ -22,63 +23,50 @@ var limit = 1000;
  * @param {Function} cbFunc the callback function
  */
 function searchPath(reqInfo, reqDetail, result, basePath, cbFunc) {
+    // 40 is max(reserveSpace)
+    var baseOrList = generateOrExpr("AA.AuId", basePath, 40);
     async.parallel([
         function(callback) {
             // AA.AuId->AA.AfId->AA.AuId(AA.AuId)
             if (reqDetail.desc[1] != 'AA.AuId') {
                 return callback(null);
             }
-            var afidHash = [];
-            var readyList = [];
-            async.parallel([function(next) {
-                var expr = "Composite(AA.AuId=" + reqDetail.value[1] +")";
-                var url = magUrlMake(expr, "AA.AuId,AA.AfId", limit);
+            var AfIdList = {};
+            var readyList = {};
+            var orList = generateOrExpr("AA.AuId", 
+                            basePath.concat([reqDetail.value[1]]), 0);
+            async.each(orList, function(item, next) {
+                var url = magUrlMake(item, "AA.AuId,AA.AfId", 
+                            (basePath.length + 1) * limit);
                 tadaRequest(url, reqInfo, function(err, data) {
                     if (!err) {
+                        var AuId, AfId;
                         for (var i = 0; i < data.length; i++) {
                             for (var j = 0; data[i].AA && j < data[i].AA.length; j++) {
-                                if (data[i].AA[j].AuId == reqDetail.value[1] 
-                                    && data[i].AA[j].AfId) {
-                                    afidHash[data[i].AA[j].AfId] = reqDetail.value[1];
+                                AuId = data[i].AA[j].AuId;
+                                AfId = data[i].AA[j].AfId;
+                                if (AuId == reqDetail.value[1] && AfId) {
+                                    AfIdList[AfId] = AuId;
                                 }
-                            }
-                        }
-                    }
-                    next(null);
-                });
-            }, function(next) {
-                async.each(basePath, function(item, nextcall) {
-                    var expr = "Composite(AA.AuId=" + item + ")";
-                    var url = magUrlMake(expr, "AA.AuId,AA.AfId", limit);
-                    tadaRequest(url, reqInfo, function(err, data) {
-                        if (!err) {
-                            var afidSet = new Set();
-                            for (var i = 0; i < data.length; i++) {
-                                for (var j = 0; data[i].AA && j < data[i].AA.length; j++) {
-                                    if (data[i].AA[j].AuId == item 
-                                        && data[i].AA[j].AfId) {
-                                        afidSet.add(data[i].AA[j].AfId);
+                                if (basePath.indexOf(AuId) != -1 && AfId) {
+                                    if (!readyList[AfId]) {
+                                        readyList[AfId] = [AuId];
+                                    } else if (readyList[AfId].indexOf(AuId) == -1) {
+                                        readyList[AfId].push(AuId);
                                     }
                                 }
                             }
-                            var afidArray = Array.from(afidSet);
-                            for (var i = 0; i < afidArray.length; i++) {
-                                readyList.push({AuId: item, AfId: afidArray[i]});
-                            }
                         }
-                        nextcall(null);
-                    });
-                }, function(err) {
+                    }
                     next(null);
                 });
-            }], function(err) {
-                for (var i = 0; i < readyList.length; i++) {
-                    if (afidHash[readyList[i].AfId]) {
-                        result.push([reqDetail.value[0], readyList[i].AuId, 
-                            readyList[i].AfId, reqDetail.value[1]]);
+            }, function(err) {
+                for (var AfId in readyList) {
+                    for (var i = 0; AfIdList[AfId] && i < readyList[AfId].length; i++) {
+                        result.push([reqDetail.value[0], readyList[AfId][i], 
+                            Number(AfId), reqDetail.value[1]]);
                     }
                 }
-                log.info("AA.AuId->AA.AfId->AA.AuId finished");
                 callback(null);
             });
         },
@@ -87,67 +75,60 @@ function searchPath(reqInfo, reqDetail, result, basePath, cbFunc) {
             if (reqDetail.desc[1] != 'AA.AuId') {
                 return callback(null);
             }
-            async.each(basePath, function(item, next) {
-                var expr = "And(Composite(AA.AuId=" + item;
-                expr += "),Composite(AA.AuId=" + reqDetail.value[1] + "))";
-                var url = magUrlMake(expr, "Id", limit);
+            async.each(baseOrList, function(item, next) {
+                var expr = "And(" + item + ",Composite(AA.AuId=";
+                expr += reqDetail.value[1] + "))";
+                var url = magUrlMake(expr, "Id,AA.AuId", limit);
                 tadaRequest(url, reqInfo, function(err, data) {
                     if (!err) {
+                        var Id, AuId;
                         for (var i = 0; i < data.length; i++) {
-                            result.push([reqDetail.value[0], item, 
-                                data[i].Id, reqDetail.value[1]]);
-                        }
-                    }
-                    next();
-                });
-            }, function(err) {
-                log.info("AA>AuId->Id->AA.AuId finished");
-                callback(null)
-            });
-        },
-        function(callback) {
-            // AA.AuId->Id 2-hop
-            if (reqDetail.desc[1] != 'Id') {
-                return callback(null);
-            }
-            var expr = "Id=" + reqDetail.value[1];
-            var url = magUrlMake(expr, "AA.AuId", limit);
-            tadaRequest(url, reqInfo, function(err, data) {
-                if (!err && data.length > 0) {
-                    var auidHash = [];
-                    for (var i = 0; data[0].AA && i < data[0].AA.length; i++) {
-                        auidHash[data[0].AA[i].AuId] = reqDetail.value[1];
-                    }
-                    for (var i = 0; i < basePath.length; i++) {
-                        if (auidHash[basePath[i]]) {
-                            result.push([reqDetail.value[0], basePath[i], 
-                                reqDetail.value[1]]);
-                        }
-                    }
-                }
-                callback(null);
-            });
-        }, function(callback) {
-            // AA.AuId->Id->RId 3-hop
-            if (reqDetail.desc[1] != 'Id') {
-                return callback(null);
-            }
-            async.each(basePath, function(item, next) {
-                var expr = "And(RId=" + reqDetail.value[1];
-                expr += ",Composite(AA.AuId=" + item + "))";
-                var url = magUrlMake(expr, "Id", limit);
-                tadaRequest(url, reqInfo, function(err, data) {
-                    if (!err) {
-                        for (var i = 0; i < data.length; i++) {
-                            result.push([reqDetail.value[0], item, 
-                                data[i].Id, reqDetail.value[1]]);
+                            Id = data[i].Id;
+                            for (var j = 0; data[i].AA && j < data[i].AA.length; j++) {
+                                AuId = data[i].AA[j].AuId;
+                                if (basePath.indexOf(AuId) != -1) {
+                                    result.push([reqDetail.value[0], AuId, 
+                                        Id, reqDetail.value[1]]);
+                                }
+                            }
                         }
                     }
                     next(null);
-                })
+                });
             }, function(err) {
-                log.info("3-hop AA.AuId->Id->RId finished");
-                console.log(result);
+                callback(null);
+            });
+        },
+        function(callback) {
+            // AA.AuId->Id->RId 2-hop and 3-hop
+            if (reqDetail.desc[1] != 'Id') {
+                return callback(null);
+            }
+            async.each(baseOrList, function(item, next) {
+                var expr = "And(" + item + ",Or(Id=" + reqDetail.value[1];
+                expr += ",RId=" + reqDetail.value[1] + "))";
+                var url = magUrlMake(expr, "Id,AA.AuId", basePath.length * limit);
+                tadaRequest(url, reqInfo, function(err, data) {
+                    if (!err) {
+                        var Id, AuId;
+                        for (var i = 0; i < data.length; i++) {
+                            Id = data[i].Id;
+                            for (var j = 0; data[i].AA && j < data[i].AA.length; j++) {
+                                AuId = data[i].AA[j].AuId;
+                                if (basePath.indexOf(AuId) != -1) {
+                                    if (Id == reqDetail.value[1]) {
+                                        result.push([reqDetail.value[0], AuId, Id]);
+                                    } else {
+                                        result.push([reqDetail.value[0], AuId, 
+                                            Id, reqDetail.value[1]]);
+                                    }
+                                }
+                            }
+                        }
+                    };
+                    next(null);
+                });
+            }, function(err) {
                 callback(null);
             });
         }
