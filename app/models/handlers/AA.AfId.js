@@ -29,7 +29,7 @@ function searchPath(reqInfo, reqDetail, result, basePath, cbFunc) {
                 //request param
                 var expr = "Composite(AA.AuId="+reqDetail.value[1]+")";
                 var attributes = "AA.AuId,AA.AfId";
-                var count = 1000;
+                var count = 9000;
                 //make url
                 var url = magUrlMake(expr, attributes, count);
                 //send request
@@ -157,7 +157,7 @@ function handle_3_hop_result(url, reqInfo, basePath, result, reqDetail, callback
                 //generate or request
                 var orExpr = generateOrReq(resultAuId, item);
                 var attributes = "AA.AuId,AA.AfId";
-                var count = 1000;
+                var count = 9000;
 
                 async.each(orExpr, function(expr, next){
                     //make url

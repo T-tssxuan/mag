@@ -35,7 +35,7 @@ function searchPath(reqInfo, reqDetail, result, basePath, cbFunc) {
                 async.each(orExpr, function(item, finish) {
                     var expr = "And("+item+",Composite(AA.AuId="+reqDetail.value[1]+"))";
                     var attributes = "F.FId,Id";
-                    var count = 1000;
+                    var count = 5000;
 
                     //make url
                     var url = magUrlMake(expr, attributes, count);
