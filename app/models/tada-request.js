@@ -30,14 +30,14 @@ var tadaRequest = function (url, info, callback, maxTry, wait) {
     }
     var timeout = info.timeout;
     if (wait) {
-        log.warn('url: ' + url)
-        log.warn('wait: ' + wait);
         timeout += 500;
     }
     processing++;
     var beginTime = Date.now();
-    request.get(url, function (error, response, body) {
+    request.get(url, {timeout: timeout}, function (error, response, body) {
         processing--;
+        var elapse = Date.now() - beginTime;
+        log.info('request time: ' + elapse + 'ms');
         if (!error && response.statusCode == 200) {
             // if successed parse the data and invoke the callback function
             if (queue.length > 0) {
@@ -53,35 +53,21 @@ var tadaRequest = function (url, info, callback, maxTry, wait) {
             } catch(e) {
                 err = e;
             }
-            log.info('request time: ' + (Date.now() - beginTime) + 'ms');
+            info.timeout = elapse * 1.2;
             log.debug('url: ' + url)
             // console.log(JSON.stringify(data));
             callback(err, data);
         } else {
             log.warn('info timeout: ' + info.timeout);
-            // log.debug('retry: ' + tryTime + ' ' + url);
+            log.error('retry: ' + tryTime + ' ' + url);
+            info.timeout = elapse * 2;
             // if failed retry
-            info.timeoutCount++;
             if (info.flag && tryTime > 1) {
                 tadaRequest(url, info, callback, --tryTime, wait);
             } else {
                 log.error('failed no retry ' + ' url: ' + url);
                 callback('failed', data);
             }
-        }
-
-        // Calculate the timeout according to recently statistic
-        var sum = info.receivedCount + info.timeoutCount;
-        if (sum > 5) {
-            if (info.timeoutCount / sum <= 0.5) {
-                info.timeout -= info.timeout / 10;
-                info.timeout = info.timeout > 500? info.timeout : 500;
-            } else if (info.timeoutCount / sum >= 0.6) {
-                info.timeout += info.timeout / 10;
-                info.timeout = info.timeout < 5000? info.timeout : 5000;
-            }
-            info.receivedCount = 0;
-            info.timeoutCount = 0;
         }
     });
 }
