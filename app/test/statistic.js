@@ -23,8 +23,8 @@ log.info("testNumber: " +  testNumber)
 var baseUrl = "https://oxfordhk.azure-api.net/academic/v1.0/evaluate?";
 var magKey = "&subscription-key=f7cc29509a8443c5b3a5e56b0e38b5a6";
 
-var apiUrl = 'http://tada.chinacloudapp.cn:3000/?';
-// var apiUrl = 'http://localhost:3000/?';
+// var apiUrl = 'http://tada.chinacloudapp.cn:3000/?';
+var apiUrl = 'http://localhost:3000/?';
 
 /**
  * Generate test case pair
