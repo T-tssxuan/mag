@@ -30,7 +30,7 @@ var subHandlers = {
  * @param {String} id2
  * @param {Object} res
  */
-function Handler(defaultDelay, id1, id2, res) {
+function Handler(defaultDelay, id1, id2, res, cache) {
     defaultDelay = defaultDelay > 200? defaultDelay : 200;
     defaultDelay = defaultDelay < 5000? defaultDelay : 5000;
     // request info about the timeout of this handle
@@ -40,7 +40,7 @@ function Handler(defaultDelay, id1, id2, res) {
         timeoutCount: 0,
         timeout: defaultDelay * 2,
         flag: true,
-        urlCache: {}
+        urlCache: cache
     }
 
     // TODO if not a number return immediately

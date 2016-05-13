@@ -8,7 +8,7 @@ var log4js = require('log4js');
 
 var log = log4js.getLogger('app');
 
-var cache = new Cache(500, 500);
+var cache = new Cache();
 
 var app = express();
 
@@ -20,8 +20,7 @@ app.get('/', function (req, res) {
     var beginTime = Date.now();
     var preResSend = res.send;
     var maybeResult = cache.getResult(req.query.id1, req.query.id2);
-    maybeResult = 0;
-    if (maybeResult) {
+    if (0 && typeof maybeResult != 'undefined') {
         res.send(maybeResult);
     } else {
         res.send = function(data) {
@@ -34,7 +33,8 @@ app.get('/', function (req, res) {
         var h = new Handler(delayChecker.getDelay(),
                             req.query.id1,
                             req.query.id2,
-                            res
+                            res,
+                            cache
                            );
         h.start();
     }

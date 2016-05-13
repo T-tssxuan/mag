@@ -17,22 +17,22 @@ var processing = 0;
  * @param {Integer} maxTry Optional
  */
 var tadaRequest = function (url, info, callback, maxTry, wait) {
-    if (info.urlCache[url]) {
+    if (typeof info.urlCache.getUrl(url) != 'undefined') {
         log.info('cache hit url: ' + url);
-        return callback(null, info.urlCache[url]);
+        return callback(null, info.urlCache.getUrl(url));
     }
-    var tryTime = maxTry || 10000;
+
+    var tryTime = maxTry || 1000;
     log.info('processing: ' + processing + ' MAXRequest: ' + MAXRequest + 
              ' queue len: ' + queue.length);
+
     if (processing >= MAXRequest) {
         queue.push([url, info, callback, maxTry, wait]);
         return;
     }
-    var timeout = info.timeout;
-    if (wait) {
-        timeout += 500;
-    }
     processing++;
+
+    var timeout = info.timeout;
     var beginTime = Date.now();
     request.get(url, {timeout: timeout}, function (error, response, body) {
         processing--;
@@ -50,6 +50,7 @@ var tadaRequest = function (url, info, callback, maxTry, wait) {
             try {
                 data = JSON.parse(body);
                 data = data['entities'];
+                info.urlCache.insertUrl(url, data);
             } catch(e) {
                 err = e;
             }

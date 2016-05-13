@@ -101,6 +101,10 @@ function makeUrls(id1, id2) {
 module.exports = function(id1, id2, cache) {
     var urls = makeUrls(id1, id2);
     async.each(urls, function(item, callback) {
+        if (typeof cache.getUrl(item['base']) != 'undefined') {
+            log.info('prerequest hit');
+            return callback(null);
+        }
         request.get(item['base'], function(err, response, body) {
             if (!err && response.statusCode == 200) {
                 log.debug('get base url: ' + item['base'] + ' success!');
@@ -111,8 +115,9 @@ module.exports = function(id1, id2, cache) {
                 } catch(e) {
                     return;
                 }
+                cache.insertUrl(item['base'], data);
                 for (var i = 0; i < item['mapUrl'].length; i++) {
-                    cache[item['mapUrl'][i]] = data;
+                    cache.insertUrl(item['mapUrl'][i], data);
                 }
             }
             callback(null);
