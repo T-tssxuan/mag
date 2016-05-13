@@ -219,7 +219,7 @@ function handle_AfId(url, reqInfo, AfId, AuIds, result, reqDetail, callback)
                 AuIdsTable[AuIds[i]] = 1;
             }
             
-            log.debug(JSON.stringify(data));
+            //log.debug(JSON.stringify(data));
 
             for(var i = 0;i < data.length;i++)
             {

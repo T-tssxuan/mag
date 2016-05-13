@@ -27,13 +27,13 @@ function searchPath(reqInfo, reqDetail, result, basePath, cbFunc) {
     async.parallel([
         function(callback) {
             // F.FId->Id->AA.AuId
-            log.debug("start to Search Path F.FId->Id->AA.AuId");
             if(reqDetail.desc[1]=="AA.AuId"){
+                log.debug("start to Search Path F.FId->Id->AA.AuId");
                 var orExpr = generateOrExpr("F.FId", basePath, 35);
                 var tempPathAuidTable = {};
 
                 async.each(orExpr, function(item, finish) {
-                    var expr = "And("+orExpr+",Composite(AA.AuId="+reqDetail.value[1]+"))";
+                    var expr = "And("+item+",Composite(AA.AuId="+reqDetail.value[1]+"))";
                     var attributes = "F.FId,Id";
                     var count = 1000;
 
@@ -42,6 +42,7 @@ function searchPath(reqInfo, reqDetail, result, basePath, cbFunc) {
 
                     //send request
                     if(url){
+                        log.debug("F.FId->Id->AA.AuId send request:"+url);
                         handle_3_hop_result(url, reqInfo, basePath, tempPathAuidTable, result, reqDetail, finish);
                     }
                     else{
@@ -58,9 +59,9 @@ function searchPath(reqInfo, reqDetail, result, basePath, cbFunc) {
         },
         function(callback) {
             // F.FId->Id->Id
-            log.debug("start to Search Path F.FId->Id->Id");
             if(reqDetail.desc[1]=="Id")
             {
+                log.debug("start to Search Path F.FId->Id->Id");
                 var expr = "Id="+reqDetail.value[1];
                 var attributes = "F.FId,CC";
                 var count = 1;
@@ -81,15 +82,19 @@ function searchPath(reqInfo, reqDetail, result, basePath, cbFunc) {
                             handle_3_hop_splitRId(reqInfo, basePath, result, reqDetail, callback);
                         }
                         else{
-                            async.each(basePath, function(item, finish){
-                                var expr = "And(Composite(F.FId="+ item +"),RId="+reqDetail.value[1]+")";
-                                var attributes = "Id";
+                            var resultTable = {};
+                            var orExpr = generateOrExpr("F.FId", basePath, 25);
+
+                            async.each(orExpr, function(item, finish){
+                                var expr = "And("+ item +",RId="+reqDetail.value[1]+")";
+                                var attributes = "F.FId,Id";
                                 var count = 11000;
                                 var url = magUrlMake(expr, attributes, count);
 
                                 //send request
                                 if(url){
-                                    handle_3_hop_result_toRid(url, reqInfo, item, result, reqDetail, finish);
+                                    log.debug("F.FId->Id->Id send Or request:"+url);
+                                    handle_3_hop_result_toRid_useOr(url, reqInfo, basePath, resultTable, result, reqDetail, finish);
                                 }
                                 else{
                                     error="F.FId->Id->Id get URL error: url is null!";
@@ -228,6 +233,33 @@ function handle_3_hop_result_toRid(url, reqInfo, basePath_i, result, reqDetail, 
     });
 }
 
+function handle_3_hop_result_toRid_useOr(url, reqInfo, basePath, resultTable, result, reqDetail, callback){
+    tadaRequest(url, reqInfo, function(err, data){
+        if(!err && data.length>0){
+            var baseTable = {};
+            for(var i = 0;i < basePath.length;i++){
+                baseTable[basePath[i]] = 1;
+            }
+
+            for(var i = 0;i < data.length;i++){
+                var FIds = data[i].F;
+                for(var j = 0; j < FIds.length;j++){
+                    var tempKey = data[i].Id+"*"+FIds[j].FId;
+                    if(FIds[j].FId in baseTable && !(tempKey in resultTable)){
+                        //found a path
+                        var path = [reqDetail.value[0], FIds[j].FId, data[i].Id, reqDetail.value[1]];
+                        result.push(path);
+                        resultTable[tempKey] = 1;
+                    }
+                }  
+            }
+            
+        }
+        callback(null);    
+    });
+}
+
+
 function handle_3_hop_splitRId(reqInfo, basePath, result, reqDetail, callback){
     if(reqDetail.desc[1]=="Id"){
         var orExpr = generateOrExpr("F.FId", basePath, 20);
@@ -244,6 +276,7 @@ function handle_3_hop_splitRId(reqInfo, basePath, result, reqDetail, callback){
 
                 //send request
                 if(url){
+                    log.debug("F.FId->Id->Id send split request:"+url);
                     handle_3_hop_result_toRid(url, reqInfo, item, result, reqDetail, next);
                 }
                 else{
