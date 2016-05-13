@@ -102,7 +102,6 @@ module.exports = function(id1, id2, cache) {
     var urls = makeUrls(id1, id2);
     async.each(urls, function(item, callback) {
         if (typeof cache.getUrl(item['base']) != 'undefined') {
-            log.info('prerequest hit');
             return callback(null);
         }
         request.get(item['base'], function(err, response, body) {
