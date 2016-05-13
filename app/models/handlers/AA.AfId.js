@@ -23,13 +23,13 @@ function searchPath(reqInfo, reqDetail, result, basePath, cbFunc) {
     async.parallel([
         function(callback){
             //AA.AfId->AA.AuId
-            log.debug("start to Search Path AA.AfId->AA.AuId");
+            //log.debug("start to Search Path AA.AfId->AA.AuId");
             if(reqDetail.desc[1]=="AA.AuId")
             {
                 //request param
                 var expr = "Composite(AA.AuId="+reqDetail.value[1]+")";
                 var attributes = "AA.AuId,AA.AfId";
-                var count = 1000;
+                var count = 9000;
                 //make url
                 var url = magUrlMake(expr, attributes, count);
                 //send request
@@ -47,7 +47,7 @@ function searchPath(reqInfo, reqDetail, result, basePath, cbFunc) {
         },
         function(callback) {
             // AA.AfId->AA.AuId->Id
-            log.debug("start to Search Path AA.AfId->AA.AuId->Id");
+            //log.debug("start to Search Path AA.AfId->AA.AuId->Id");
             if(reqDetail.desc[1]=="Id")
             {
                 var expr = "Id="+reqDetail.value[1];
@@ -157,12 +157,12 @@ function handle_3_hop_result(url, reqInfo, basePath, result, reqDetail, callback
                 //generate or request
                 var orExpr = generateOrReq(resultAuId, item);
                 var attributes = "AA.AuId,AA.AfId";
-                var count = 1000;
+                var count = 9000;
 
                 async.each(orExpr, function(expr, next){
                     //make url
                     var url = magUrlMake(expr, attributes, count);
-                    log.debug("send request:"+url);
+                    //log.debug("send request:"+url);
                     if(url){
                         handle_AfId(url, reqInfo, item, resultAuId, result, reqDetail, next);
                     }
@@ -229,7 +229,7 @@ function handle_AfId(url, reqInfo, AfId, AuIds, result, reqDetail, callback)
                         if(AA[j].AuId in AuIdsTable && !(AA[j].AuId in tempTable)){
                             //found a path
                             var path = [reqDetail.value[0], AfId, AA[j].AuId, reqDetail.value[1]];
-                            log.debug("AA.AfId->AA.AuId->Id found a path!!");
+                            //log.debug("AA.AfId->AA.AuId->Id found a path!!");
                             result.push(path);
                             tempTable[AA[j].AuId] = 1;
                         }
