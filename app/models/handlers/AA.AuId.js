@@ -12,7 +12,7 @@ var adatper = {
     'AA.AuId': []
 }
 
-var limit = 1000;
+var limit = 5000;
 
 /**
  * Search the path with given basePath
