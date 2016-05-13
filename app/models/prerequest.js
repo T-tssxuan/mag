@@ -87,7 +87,10 @@ function makeUrls(id1, id2) {
                 mapUrlMake('Id=' + id2, 'F.FId', 100),
 
                 // for CC
-                mapUrlMake('Id=' + id2, 'CC', 1)
+                mapUrlMake('Id=' + id2, 'CC', 1),
+
+                // for CC
+                mapUrlMake('Id=' + id2, 'F.FId,CC', 1)
             ],
         }
     ];
