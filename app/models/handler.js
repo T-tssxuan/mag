@@ -64,9 +64,6 @@ function Handler(defaultDelay, id1, id2, res, cache) {
     // the path search result
     this.result = [];
 
-    log.info('init a Handler with defaultDelay: ' + defaultDelay +
-             ' id1: ' + id1 + ' id2: ' + id2);
-
     preRequest(this.id1, this.id2, this.reqInfo.urlCache);
 }
 
