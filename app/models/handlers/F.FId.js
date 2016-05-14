@@ -208,7 +208,7 @@ function handle_3_hop_result_toRid(url, reqInfo, basePath_i, result, reqDetail, 
             
         }
         callback(null);    
-    });
+    },0,1);
 }
 
 // function handle_3_hop_result_toRid_useOr(url, reqInfo, basePath, resultTable, result, reqDetail, callback){
