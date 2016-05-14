@@ -211,9 +211,9 @@ function process2Hop(reqInfo, reqDetail, result, callback) {
     if (reqDetail.desc[1] != 'AA.AuId') {
         return callback(null);
     }
-    log.inof('in the AA.AuId -> Id -> AA.AuId');
+    log.info('in the AA.AuId -> Id -> AA.AuId');
     var expr = 'And(Composite(AA.AuId=' + reqDetail.value[0] + '),';
-    expr = 'Composite(AA.AuId=' + reqDetail.value[1] + '))';
+    expr += 'Composite(AA.AuId=' + reqDetail.value[1] + '))';
     var url = magUrlMake(expr, 'Id', 10000);
     tadaRequest(url, reqInfo, function(err, data) {
         if (!err && data.length > 0) {
