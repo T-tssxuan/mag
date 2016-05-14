@@ -21,13 +21,18 @@ function makeUrls(id1, id2) {
         {
             'base': mapUrlMake(
                 'Composite(AA.AuId=' + id1 + ')', 
-                'Id,AA.AuId,AA.AfId',
+                'AA.AuId,AA.AfId,J.JId,C.CId,F.FId,RId,Id',
                 10000),
             'mapUrl': [
                 // for 1-hop AA.AuId field
                 mapUrlMake(
                     'Composite(AA.AuId=' + id1 + ')', 
                     'Id,AA.AuId,AA.AfId', 
+                    10000
+                ),
+                mapUrlMake(
+                    'Composite(AA.AuId=' + id1 + ')',
+                    'AA.AuId,J.JId,C.CId,F.FId,RId,Id',
                     10000
                 )
             ]
@@ -92,6 +97,17 @@ function makeUrls(id1, id2) {
                 // for CC
                 mapUrlMake('Id=' + id2, 'F.FId,CC', 1)
             ],
+        },
+        // for AuId and AuId
+        {
+            'base': mapUrlMake(
+                'And(Composite(AA.AuId=' + id1 + '),Composite(AA.AuId=' + 
+                    id2 + '))',
+                'Id',
+                10000
+            ),
+            'mapUrl': [
+            ]
         }
     ];
 

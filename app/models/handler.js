@@ -19,7 +19,8 @@ var subHandlers = {
     'Id': require('./handlers/Id'),
     'RId': require('./handlers/Id'),
     'J.JId': require('./handlers/J.JId'),
-    'AA.AfId': require('./handlers/AA.AfId')
+    'AA.AfId': require('./handlers/AA.AfId'),
+    'AuId_Id': require('./handlers/AuId_Id')
 }
 
 /**
@@ -76,57 +77,6 @@ function Handler(defaultDelay, id1, id2, res, cache) {
  * All of the subsequent processing is according to the result of this function.
  */
 Handler.prototype.getRequestDetail = function() {
-    // var validCount = 0;
-    // var testCount = 0;
-    // var that = this;
-
-    // // the field test function, which decide the field of the id according to 
-    // // the number of result can get.
-    // // If there are results in the request, the field is valid.
-    // var testField = function(field, id, expr, pos) {
-    //     var url = magUrlMake(expr, '', 1);
-
-    //     tadaRequest(url, that.reqInfo, function(err, data) {
-    //         log.debug('getRequestDetail: ' + JSON.stringify(data));
-    //         if (!err) {
-    //             // If there is data in this request and has not been set as
-    //             // AA.AuId, we set it.
-    //             // priority of AA.AuId higher than priority of Id
-    //             if (data.length != 0 
-    //                 && that.reqDetail.desc[pos - 1] != 'AA.AuId') {
-    //                 that.reqDetail.value[pos - 1] = id;
-    //                 validCount++;
-    //                 that.reqDetail.desc[pos - 1] = field;
-    //             }
-    //         } else {
-    //             log.info('getRequestDetail: get the error data' + data);
-    //         }
-    //         testCount++;
-    //         
-    //         // At most 4 result
-    //         if (testCount == 4) {
-    //             // check whether get an validate pair
-    //             if (that.reqDetail.desc[0] != '' 
-    //                 && that.reqDetail.desc[1] != '') {
-    //                 log.info('the search is started');
-    //                 log.debug('request detail: '
-    //                           + JSON.stringify(that.reqDetail));
-    //                 that.startSearch();
-    //             } else {
-    //                 // the pair is not valid, need to send empty result
-    //                 log.info('not find valid query pair');
-    //                 that.sendResult();
-    //             }
-    //         }
-    //     }, 10);
-    // }
-
-    // // Test the idx and field
-    // testField('Id', this.id1, 'Id=' + this.id1, 1);
-    // testField('AA.AuId', this.id1, 'Composite(AA.AuId=' + this.id1 + ')', 1);
-    // testField('Id', this.id2, 'Id=' + this.id2, 2);
-    // testField('AA.AuId', this.id2, 'Composite(AA.AuId=' + this.id2 + ')', 2);
-
     var that = this;
     var testField = function (target, idx, lock, callback) {
         var expr = 'Or(Id=' + target + ',';
@@ -190,7 +140,7 @@ Handler.prototype.startSearch = function() {
 
 Handler.prototype.processSubPath = function(field, elements, callback) {
     log.debug('field: ' + field + ' elements: ' + JSON.stringify(elements));
-    if (elements.length == 0) {
+    if (elements.length == 0 && field != 'AuId_Id') {
         return callback(null);
     }
     subHandlers[field](
@@ -212,59 +162,38 @@ Handler.prototype.AAAuIdHop1 = function() {
     var url = magUrlMake(expr, 'Id,AA.AuId,AA.AfId', 10000);
 
     // Get the hop-1 result and generate the rest hops
-    tadaRequest(url, this.reqInfo, function(err, data) {
-        if (!err && data.length > 0) {
-            that.beginAAAuId(data);
-        } else {
-            that.sendResult();
-        }
-    });
-}
 
-/**
- * Parallel search the rest hops with the path begin with AA.AuId.
- *
- * @param {Object} data
- */
-Handler.prototype.beginAAAuId = function(data) {
-    var that = this;
-
-    // Parallel process each path
     async.parallel([
         function(callback) {
-            var ids = [];
-            for (var i = 0; i < data.length; i++) {
-                ids.push(data[i]['Id']);
-
-                // If the Id fullfil the query pair, push it into the result
-                if (data[i]['Id'] == that.reqDetail.value[1]) {
-                    that.result.push([that.reqDetail.value[0], data[i]['Id']]);
+            tadaRequest(url, that.reqInfo, function(err, data) {
+                if (!err && data.length > 0) {
+                    var afids = [];
+                    for (var i = 0; i < data.length; i++) {
+                        for (var j = 0; j < data[i]['AA'].length; j++) {
+                            if (data[i]['AA'][j]['AuId'] == that.id1) {
+                                if (data[i]['AA'][j]['AfId'] 
+                                    && afids.indexOf(data[i]['AA'][j]['AfId']) == -1) {
+                                    afids.push(data[i]['AA'][j]['AfId']);
+                                }
+                                break;
+                            }
+                        }
+                    }
+                    log.debug('afids: ' + afids);
+                    if (afids.length > 0) {
+                        that.processSubPath('AA.AfId', afids, callback);
+                    } else {
+                        callback(null);
+                    }
+                } else {
+                    callback(null);
                 }
-            }
-            that.processSubPath('Id', ids, callback);
+            });
         },
         function(callback) {
-            // Get all field Id that the AA.AuId researched
-            var afids = [];
-            for (var i = 0; i < data.length; i++) {
-                for (var j = 0; j < data[i]['AA'].length; j++) {
-                    if (data[i]['AA'][j]['AuId'] == that.id1) {
-                        if (data[i]['AA'][j]['AfId'] 
-                           && afids.indexOf(data[i]['AA'][j]['AfId']) == -1) {
-                            afids.push(data[i]['AA'][j]['AfId']);
-                        }
-                        break;
-                    }
-                }
-            }
-            log.debug('afids: ' + afids);
-            if (afids.length > 0) {
-                that.processSubPath('AA.AfId', afids, callback);
-            } else {
-                callback(null);
-            }
-        },
-    ], function (err) {
+            that.processSubPath('AuId_Id', [], callback);
+        }
+    ], function(err) {
         that.sendResult();
     });
 }
