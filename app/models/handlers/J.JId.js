@@ -56,7 +56,7 @@ function searchPath(reqInfo, reqDetail, result, basePath, cbFunc) {
             tadaRequest(url, reqInfo, function(err, data) {
                 if (!err && data.length > 0) {
                     // get 2-hop results
-                    if (data[0].J.JId == basePath[0]) {
+                    if (data[0].J && data[0].J.JId == basePath[0]) {
                         result.push([reqDetail.value[0], basePath[0], 
                             reqDetail.value[1]]);
                     }
