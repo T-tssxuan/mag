@@ -182,6 +182,8 @@ function handle_3_hop_result(url, reqInfo, basePath, result, reqDetail, callback
             {
                 var Id = data[i].Id;
                 var Fids = data[i].F;
+                if(!Fids)
+                    continue;
                 for(var j = 0;j < Fids.length;j++){
                     if(Fids[j].FId in baseTable){
                         //found a unique path
