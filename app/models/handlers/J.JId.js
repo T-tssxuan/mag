@@ -12,6 +12,8 @@ var adatper = {
 }
 
 var limit = 1000;
+var count = 10000;
+var smCount = 1;
 
 /**
  * Search the path with given basePath
@@ -28,14 +30,16 @@ function searchPath(reqInfo, reqDetail, result, basePath, cbFunc) {
             if (reqDetail.desc[1] != "AA.AuId") {
                 return callback(null);
             }
-            var expr = "And(Composite(J.JId=" + basePath[0];
-            expr += "),Composite(AA.AuId=" + reqDetail.value[1] + "))";
-            var url = magUrlMake(expr, "Id", limit);
+            var expr = "Composite(AA.AuId=" + reqDetail.value[1] + ")";
+            var attributes = "F.FId,C.CId,AA.AuId,AA.AfId,J.JId,Id,RId";
+            var url = magUrlMake(expr, attributes, count);
             tadaRequest(url, reqInfo, function(err, data) {
                 if (!err) {
                     for (var i = 0; i < data.length; i++) {
-                        result.push([reqDetail.value[0], basePath[0], 
-                            data[i].Id, reqDetail.value[1]])
+                        if (data[i].J && data[i].J.JId == basePath[0]) {
+                            result.push([reqDetail.value[0], basePath[0], 
+                                data[i].Id, reqDetail.value[1]]);
+                        }
                     }
                 }
                 callback(null);
@@ -46,23 +50,49 @@ function searchPath(reqInfo, reqDetail, result, basePath, cbFunc) {
             if (reqDetail.desc[1] != "Id") {
                 return callback(null);
             }
-            var expr = "And(Composite(J.JId=" + basePath[0] + "),Or(Id=";
-            expr += reqDetail.value[1] + ",RId=" + reqDetail.value[1] + "))";
-            var url = magUrlMake(expr, "Id", limit);
+            var expr = "Id=" + reqDetail.value[1];
+            var attributes = "F.FId,C.CId,AA.AuId,J.JId,CC";
+            var url = magUrlMake(expr, attributes, smCount);
             tadaRequest(url, reqInfo, function(err, data) {
-                if (!err) {
-                    for (var i = 0; i < data.length; i++) {
-                        if (data[i].Id ==  reqDetail.value[1]) {
-                            result.push([reqDetail.value[0], basePath[0], 
-                                reqDetail.value[1]]);
-                        } else {
-                            result.push([reqDetail.value[0], basePath[0], 
-                                data[i].Id, reqDetail.value[1]]);
-                        }
+                if (!err && data.length > 0) {
+                    // get 2-hop results
+                    if (data[0].J.JId == basePath[0]) {
+                        results.push([reqDetail.value[0], basePath[0], 
+                            reqDetail.value[1]]);
+                    }
+                    if (!Number.isNaN(data[0].CC) && data[0].CC <= 10000) {
+                        // get 3-hop results by using prerequest
+                        var expr = "RId=" + reqDetail.value[1];
+                        var attributes = "F.FId,C.CId,AA.AuId,J.JId,Id";
+                        var url = magUrlMake(expr, attributes, count);
+                        tadaRequest(url, reqInfo, function(err, data) {
+                            if (!err) {
+                                for (var i = 0; i < data.length; i++) {
+                                    if (data[i].J && data[i].J.JId == basePath[0]) {
+                                        result.push([reqDetail.value[0], basePath[0], 
+                                            data[i].Id, reqDetail.value[1]]);
+                                    }
+                                }
+                            }
+                            callback(null);
+                        });
+                    } else {
+                        // get 3-hop results directly
+                        var expr = "And(Composite(J.JId=" + basePath[0];
+                        expr += "),RId=" + reqDetail.value[1] + ")";
+                        var url = magUrlMake(expr, "Id", limit);
+                        tadaRequest(url, reqInfo, function(err, data) {
+                            if (!err) {
+                                for (var i = 0; i < data.length; i++) {
+                                    result.push([reqDetail.value[0], basePath[0], 
+                                        data[i].Id, reqDetail.value[1]]);
+                                }
+                            }
+                            callback(null);
+                        });
                     }
                 }
-                callback(null);
-            });            
+            });      
         }
     ], function(err) {
         cbFunc(err);
