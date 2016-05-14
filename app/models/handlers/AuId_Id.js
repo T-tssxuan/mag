@@ -52,6 +52,9 @@ function searchPathMain(reqInfo, reqDetail, result, callback) {
                                 && data[i]['RId'].indexOf(Id2) != -1) {
                                 result.push([Id1, data[i]['Id'], Id2]);
                             }
+                            if (data[i]['Id'] == Id2) {
+                                result.push([Id1, Id2]);
+                            }
                         }
                     }
                 }
