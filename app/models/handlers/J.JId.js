@@ -57,7 +57,7 @@ function searchPath(reqInfo, reqDetail, result, basePath, cbFunc) {
                 if (!err && data.length > 0) {
                     // get 2-hop results
                     if (data[0].J.JId == basePath[0]) {
-                        results.push([reqDetail.value[0], basePath[0], 
+                        result.push([reqDetail.value[0], basePath[0], 
                             reqDetail.value[1]]);
                     }
                     if (!Number.isNaN(data[0].CC) && data[0].CC <= 10000) {
