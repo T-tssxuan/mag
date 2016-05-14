@@ -60,14 +60,8 @@ function makeUrls(id1, id2) {
                 mapUrlMake(
                     'Composite(AA.AuId=' + id2 + ')',
                     'AA.AuId,AA.AfId',
-                    1000
-                ),
-                // for 2-hop AA.AfId->AA.AuId
-                mapUrlMake(
-                    'Composite(AA.AuId=' + id2 + ')',
-                    'AA.AuId,AA.AfId',
-                    1000
-                ), 
+                    10000
+                )
             ]
         },
         // for id1
