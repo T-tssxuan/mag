@@ -10,7 +10,12 @@ function makeUrls(id1, id2) {
 
     // for 3-hop (Id, AA.AuId)->Id->Id->Id
     for (var i = 0; i < 1; i++) {
-        var tmp = mapUrlMake('RId=' + id2, 'Id', 10000, i * 10000);
+        var tmp = mapUrlMake(
+            'RId=' + id2, 
+            'F.FId,C.CId,AA.AuId,J.JId,Id', 
+            10000, 
+            i * 10000
+        );
         var obj = {};
         obj['base'] = tmp;
         obj['mapUrl'] = [tmp];
@@ -41,7 +46,7 @@ function makeUrls(id1, id2) {
         {
             'base': mapUrlMake(
                 'Composite(AA.AuId=' + id2 + ')',
-                'Id,AA.AuId,AA.AfId',
+                'F.FId,C.CId,AA.AuId,AA.AfId,J.JId,Id,RId',
                 10000
             ),
             'mapUrl': [
@@ -69,13 +74,15 @@ function makeUrls(id1, id2) {
         {
             'base': mapUrlMake('Id=' + id1, 'RId,F.FId,C.CId,AA.AuId,J.JId'),
             'mapUrl': [
-                // for 1-hop Id field
-                mapUrlMake('Id=' + id1, 'RId,F.FId,C.CId,AA.AuId,J.JId'),
             ]
         },
         // for id2
         {
-            'base': mapUrlMake('Id=' + id2, 'AA.AuId,J.JId,C.CId,F.FId,CC'),
+            'base': mapUrlMake(
+                'Id=' + id2, 
+                'F.FId,C.CId,AA.AuId,J.JId,CC', 
+                1
+            ),
             'mapUrl': [
                 // luoxuan
                 // for 3-hop (Id, AA.AuId)->Id->(AA.AuId,J.JId,C.CId,F.FId)->Id
