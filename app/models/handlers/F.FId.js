@@ -29,30 +29,24 @@ function searchPath(reqInfo, reqDetail, result, basePath, cbFunc) {
             // F.FId->Id->AA.AuId
             if(reqDetail.desc[1]=="AA.AuId"){
                 log.debug("start to Search Path F.FId->Id->AA.AuId");
-                var orExpr = generateOrExpr("F.FId", basePath, 35);
-                var tempPathAuidTable = {};
 
-                async.each(orExpr, function(item, finish) {
-                    var expr = "And("+item+",Composite(AA.AuId="+reqDetail.value[1]+"))";
-                    var attributes = "F.FId,Id";
-                    var count = 1000;
+                var expr = "Composite(AA.AuId="+reqDetail.value[1]+")";
+                var attributes = "F.FId,C.CId,AA.AuId,AA.AfId,J.JId,Id,RId";
+                var count = 10000;
 
-                    //make url
-                    var url = magUrlMake(expr, attributes, count);
+                //make url
+                var url = magUrlMake(expr, attributes, count);
 
-                    //send request
-                    if(url){
-                        log.debug("F.FId->Id->AA.AuId send request:"+url);
-                        handle_3_hop_result(url, reqInfo, basePath, tempPathAuidTable, result, reqDetail, finish);
-                    }
-                    else{
-                        error="F.FId->Id->AA.AuId get URL error: url is null!";
-                        finish(null);//do not send error
-                    }
-                }, 
-                function(err) {
-                    callback(err);
-                });
+                //send request
+                if(url){
+                    log.debug("F.FId->Id->AA.AuId send request:"+url);
+                    handle_3_hop_result(url, reqInfo, basePath, result, reqDetail, callback);
+                }
+                else{
+                    error="F.FId->Id->AA.AuId get URL error: url is null!";
+                    callback(null);//do not send error
+                }
+               
             } else {
                 callback(null);
             }            
@@ -63,7 +57,7 @@ function searchPath(reqInfo, reqDetail, result, basePath, cbFunc) {
             {
                 log.debug("start to Search Path F.FId->Id->Id");
                 var expr = "Id="+reqDetail.value[1];
-                var attributes = "F.FId,CC";
+                var attributes = "F.FId,C.CId,AA.AuId,J.JId,CC";
                 var count = 1;
                 
                 //make url
@@ -82,28 +76,21 @@ function searchPath(reqInfo, reqDetail, result, basePath, cbFunc) {
                             handle_3_hop_splitRId(reqInfo, basePath, result, reqDetail, callback);
                         }
                         else{
-                            var resultTable = {};
-                            var orExpr = generateOrExpr("F.FId", basePath, 25);
+                            var expr = "RId="+reqDetail.value[1];
+                            var attributes = "F.FId,C.CId,AA.AuId,J.JId,Id";
+                            var count = 10000;
+                            var offset = 0;
+                            var url = magUrlMake(expr, attributes, count, offset);
 
-                            async.each(orExpr, function(item, finish){
-                                var expr = "And("+ item +",RId="+reqDetail.value[1]+")";
-                                var attributes = "F.FId,Id";
-                                var count = 11000;
-                                var url = magUrlMake(expr, attributes, count);
-
-                                //send request
-                                if(url){
-                                    log.debug("F.FId->Id->Id send Or request:"+url);
-                                    handle_3_hop_result_toRid_useOr(url, reqInfo, basePath, resultTable, result, reqDetail, finish);
-                                }
-                                else{
-                                    error="F.FId->Id->Id get URL error: url is null!";
-                                    finish(null);//do not send error
-                                }
-                            },
-                            function(err){
-                                callback(null);
-                            });
+                            //send request
+                            if(url){
+                                log.debug("F.FId->Id->Id send Or request:"+url);
+                                handle_3_hop_result(url, reqInfo, basePath, result, reqDetail, callback);
+                            }
+                            else{
+                                error="F.FId->Id->Id get URL error: url is null!";
+                                callback(null);//do not send error
+                            }
                         }
                     }
                     else{
@@ -148,33 +135,27 @@ module.exports = function(reqInfo, reqDetail, result, basePath, cbFunc) {
  * @param {Function} callback
  */
 function handle_2_hop_result(basePath, result, reqDetail, data) {
-        if(data.length>0){
-            var FidsArray = data[0].F;//this array only has one element, get its "F" array
-            var FidsStringArray = [];//resultId's F.FId
+    if(data.length>0){
+        var FidsArray = data[0].F;//this array only has one element, get its "F" array
 
-            if(FidsArray)
-            {
-                for(var i=0;i<FidsArray.length;i++){
-                    FidsStringArray[i]=FidsArray[i].FId;
+        if(FidsArray)
+        {
+            /*find intersection of startFid and endFid*/
+            var hashTable = {};
+            for(var i = 0; i<basePath.length;i++){
+                hashTable[basePath[i]] = 1;
+            }
+            for(var i = 0;i<FidsArray.length;i++){
+                if(FidsArray[i].FId in hashTable){
+                    //2-hop result
+                    var path = [reqDetail.value[0], FidsArray[i].FId, reqDetail.value[1]];
+                    //log.debug("found 2-hop(Id->F.FId->Id) result:"+path);
+                    //add to result set
+                    result.push(path);
                 }
-                
-                /*find intersection of startFid and endFid*/
-                var hashTable = {};
-                for(var i = 0; i<basePath.length;i++){
-                    hashTable[basePath[i]] = 1;
-                }
-                for(var i = 0;i<FidsStringArray.length;i++){
-                    if(FidsStringArray[i] in hashTable){
-                        //2-hop result
-                        var path = [reqDetail.value[0], FidsStringArray[i], reqDetail.value[1]];
-                        //log.debug("found 2-hop(Id->F.FId->Id) result:"+path);
-                        //add to result set
-                        result.push(path);
-                    }
-                    hashTable[FidsStringArray[i]] = 1;
-                }
-            }       
-        }
+            }
+        }       
+    }
 }
 
 /**
@@ -187,7 +168,7 @@ function handle_2_hop_result(basePath, result, reqDetail, data) {
  * @param {Object} reqDetail the infomation about the query pair
  * @param {Function} callback
  */
-function handle_3_hop_result(url, reqInfo, basePath, tempPathAuidTable, result, reqDetail, callback){
+function handle_3_hop_result(url, reqInfo, basePath, result, reqDetail, callback){
     
     tadaRequest(url, reqInfo, function(err, data) {
         if(!err && data.length>0)
@@ -203,14 +184,9 @@ function handle_3_hop_result(url, reqInfo, basePath, tempPathAuidTable, result, 
                 var Fids = data[i].F;
                 for(var j = 0;j < Fids.length;j++){
                     if(Fids[j].FId in baseTable){
-                        //found a path but may be not unique
-                        var tempKey = Id+"*"+Fids[j].FId;
-                        if(!(tempKey in tempPathAuidTable)){
-                            //found a unique path
-                            var path = [reqDetail.value[0], Fids[j].FId, Id, reqDetail.value[1]];
-                            result.push(path);
-                            tempPathAuidTable[tempKey] = 1;
-                        }
+                        //found a unique path
+                        var path = [reqDetail.value[0], Fids[j].FId, Id, reqDetail.value[1]];
+                        result.push(path);
                     }
                 }
             }
@@ -233,31 +209,31 @@ function handle_3_hop_result_toRid(url, reqInfo, basePath_i, result, reqDetail, 
     });
 }
 
-function handle_3_hop_result_toRid_useOr(url, reqInfo, basePath, resultTable, result, reqDetail, callback){
-    tadaRequest(url, reqInfo, function(err, data){
-        if(!err && data.length>0){
-            var baseTable = {};
-            for(var i = 0;i < basePath.length;i++){
-                baseTable[basePath[i]] = 1;
-            }
+// function handle_3_hop_result_toRid_useOr(url, reqInfo, basePath, resultTable, result, reqDetail, callback){
+//     tadaRequest(url, reqInfo, function(err, data){
+//         if(!err && data.length>0){
+//             var baseTable = {};
+//             for(var i = 0;i < basePath.length;i++){
+//                 baseTable[basePath[i]] = 1;
+//             }
 
-            for(var i = 0;i < data.length;i++){
-                var FIds = data[i].F;
-                for(var j = 0; j < FIds.length;j++){
-                    var tempKey = data[i].Id+"*"+FIds[j].FId;
-                    if(FIds[j].FId in baseTable && !(tempKey in resultTable)){
-                        //found a path
-                        var path = [reqDetail.value[0], FIds[j].FId, data[i].Id, reqDetail.value[1]];
-                        result.push(path);
-                        resultTable[tempKey] = 1;
-                    }
-                }  
-            }
+//             for(var i = 0;i < data.length;i++){
+//                 var FIds = data[i].F;
+//                 for(var j = 0; j < FIds.length;j++){
+//                     var tempKey = data[i].Id+"*"+FIds[j].FId;
+//                     if(FIds[j].FId in baseTable && !(tempKey in resultTable)){
+//                         //found a path
+//                         var path = [reqDetail.value[0], FIds[j].FId, data[i].Id, reqDetail.value[1]];
+//                         result.push(path);
+//                         resultTable[tempKey] = 1;
+//                     }
+//                 }  
+//             }
             
-        }
-        callback(null);    
-    });
-}
+//         }
+//         callback(null);    
+//     });
+// }
 
 
 function handle_3_hop_splitRId(reqInfo, basePath, result, reqDetail, callback){
