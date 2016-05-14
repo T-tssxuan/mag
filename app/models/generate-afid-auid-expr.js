@@ -29,6 +29,8 @@ module.exports = function(AuIds, AfIds) {
             }
         }       
     }
-    results.push(expr);
+    if (expr != '') {
+        results.push(expr);
+    }
     return results;
 }

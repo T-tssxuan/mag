@@ -5,6 +5,7 @@ var magUrlMake = require('../mag-url-make');
 
 var log = log4js.getLogger('Id-AA.AuId');
 var generateOrExpr = require('../generate-or-expr');
+var generateAfIdAuIdExpr = require('../generate-afid-auid-expr');
 
 // Using this object to check whether this path app suitable to the query pair
 var adatper = {
@@ -31,44 +32,55 @@ function searchPath(reqInfo, reqDetail, result, basePath, cbFunc) {
             if (reqDetail.desc[1] != 'AA.AuId') {
                 return callback(null);
             }
-            var AfIdList = {};
-            var readyList = {};
-            var orList = generateOrExpr("AA.AuId", 
-                            basePath.concat([reqDetail.value[1]]), 0);
-            async.each(orList, function(item, next) {
-                var url = magUrlMake(item, "AA.AuId,AA.AfId", 
-                            (basePath.length + 1) * limit);
-                tadaRequest(url, reqInfo, function(err, data) {
-                    if (!err) {
-                        var AuId, AfId;
-                        for (var i = 0; i < data.length; i++) {
-                            for (var j = 0; data[i].AA && j < data[i].AA.length; j++) {
-                                AuId = data[i].AA[j].AuId;
-                                AfId = data[i].AA[j].AfId;
-                                if (AuId == reqDetail.value[1] && AfId) {
-                                    AfIdList[AfId] = AuId;
-                                }
-                                if (basePath.indexOf(AuId) != -1 && AfId) {
-                                    if (!readyList[AfId]) {
-                                        readyList[AfId] = [AuId];
-                                    } else if (readyList[AfId].indexOf(AuId) == -1) {
-                                        readyList[AfId].push(AuId);
-                                    }
-                                }
+            var expr = "Composite(AA.AuId=" + reqDetail.value[1] + ")";
+            var attributes = "F.FId,C.CId,AA.AuId,AA.AfId,J.JId,Id,RId";
+            var url = magUrlMake(expr, attributes, count);
+            // get AfIds
+            var AfIds = [];
+            tadaRequest(url, reqInfo, function(err, data) {
+                if (!err) {
+                    for (var i = 0; i < data.length; i++) {
+                        for (var j = 0; data[i].AA && j < data[i].AA.length; j++) {
+                            if (data[i].AA[j].AuId == reqDetail.value[1] 
+                                && data[i].AA[j].AfId 
+                                && AfIds.indexOf(data[i].AA[j].AfId) == -1) {
+                                AfIds.push(data[i].AA[j].AfId);
                             }
                         }
                     }
-                    next(null);
-                });
-            }, function(err) {
-                for (var AfId in readyList) {
-                    for (var i = 0; AfIdList[AfId] && i < readyList[AfId].length; i++) {
-                        result.push([reqDetail.value[0], readyList[AfId][i], 
-                            Number(AfId), reqDetail.value[1]]);
-                    }
+                    var orList = generateAfIdAuIdExpr(basePath, AfIds);
+                    async.each(orList, function(item, next) {
+                        var url = magUrlMake(item, "AA.AuId,AA.AfId", 34000);
+                        tadaRequest(url, reqInfo, function(err, data) {
+                            if (!err) {
+                                var uniqueHash = {};
+                                var AuId,AfId;
+                                for (var i = 0; i < data.length; i++) {
+                                    for (var j = 0; data[i].AA && j < data[i].AA.length; j++) {
+                                        AuId = data[i].AA[j].AuId;
+                                        AfId = data[i].AA[j].AfId;
+                                        if (AfId && AfIds.indexOf(AfId) != -1 
+                                            && basePath.indexOf(AuId) != -1) {
+                                            if (!uniqueHash[AfId]) {
+                                                uniqueHash[AfId] = [AuId];
+                                                result.push([reqDetail.value[0], data[i].AA[j].AuId, 
+                                                    data[i].AA[j].AfId, reqDetail.value[1]]);
+                                            } else if (uniqueHash[AfId].indexOf(AuId) == -1) {
+                                                uniqueHash[AfId].push(AuId);
+                                                result.push([reqDetail.value[0], data[i].AA[j].AuId, 
+                                                    data[i].AA[j].AfId, reqDetail.value[1]]);
+                                            }                                            
+                                        }
+                                    }
+                                }
+                            }
+                            next(null);
+                        });
+                    }, function(err) {
+                        callback(null);
+                    });
                 }
-                callback(null);
-            });
+            });           
         },
         function(callback) {
             // AA>AuId->Id->AA.AuId(AA.AuId)
