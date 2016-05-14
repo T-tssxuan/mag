@@ -64,9 +64,6 @@ function Handler(defaultDelay, id1, id2, res, cache) {
     // the path search result
     this.result = [];
 
-    log.info('init a Handler with defaultDelay: ' + defaultDelay +
-             ' id1: ' + id1 + ' id2: ' + id2);
-
     preRequest(this.id1, this.id2, this.reqInfo.urlCache);
 }
 
@@ -159,7 +156,11 @@ Handler.prototype.processSubPath = function(field, elements, callback) {
 Handler.prototype.AAAuIdHop1 = function() {
     var that = this;
     var expr = 'Composite(AA.AuId=' + this.reqDetail.value[0] + ')';
-    var url = magUrlMake(expr, 'Id,AA.AuId,AA.AfId', 10000);
+    var url = magUrlMake(
+        expr, 
+        'AA.AuId,AA.AfId,J.JId,C.CId,F.FId,RId,Id',
+        10000
+    );
 
     // Get the hop-1 result and generate the rest hops
 

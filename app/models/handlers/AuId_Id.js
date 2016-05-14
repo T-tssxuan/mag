@@ -65,7 +65,11 @@ function searchPathMain(reqInfo, reqDetail, result, callback) {
             // Id->Id->Id->AA.AuId
             if (reqDetail.desc[1] == 'AA.AuId') {
                 var expr = 'Composite(AA.AuId=' + Id2 + ')';
-                var url = magUrlMake(expr, 'Id', 10000);
+                var url = magUrlMake(
+                    expr, 
+                    'F.FId,C.CId,AA.AuId,AA.AfId,J.JId,Id,RId', 
+                    10000
+                );
                 tadaRequest(url, reqInfo, function(err, data) {
                     if (!err && data.length > 0) {
                         auidData = data;
@@ -93,7 +97,12 @@ function searchPathMain(reqInfo, reqDetail, result, callback) {
                     }
                     async.each(items, function(item, finish) {
                         var expr = 'RId=' + Id2;
-                        var url = magUrlMake(expr, 'Id' , 10000, item);
+                        var url = magUrlMake(
+                            expr, 
+                            'F.FId,C.CId,AA.AuId,J.JId,Id', 
+                            10000, 
+                            item
+                        );
                         tadaRequest(url, reqInfo, function(err, data) {
                             if (!err && data.length > 0) {
                                 ridData = ridData.concat(data);
@@ -111,7 +120,7 @@ function searchPathMain(reqInfo, reqDetail, result, callback) {
         function(next) {
             // Id->Id->(J.JId,C.CId,F.FId,AA.AuId)->Id
             if (reqDetail.desc[1] == 'Id') {
-                var attribute = 'AA.AuId,J.JId,C.CId,F.FId';
+                var attribute = 'F.FId,C.CId,AA.AuId,J.JId,CC';
                 var expr = 'Id=' + reqDetail.value[1];
                 var url = magUrlMake(expr, attribute);
                 tadaRequest(url, reqInfo, function(err, data) {
