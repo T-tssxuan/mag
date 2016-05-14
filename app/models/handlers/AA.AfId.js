@@ -2,6 +2,7 @@ var log4js = require('log4js');
 var async = require('async');
 var tadaRequest = require('../tada-request');
 var magUrlMake = require('../mag-url-make');
+var generateOrReq = require('../generate-afid-or-expr');
 
 var log = log4js.getLogger('AA.AfId');
 
@@ -23,7 +24,7 @@ function searchPath(reqInfo, reqDetail, result, basePath, cbFunc) {
     async.parallel([
         function(callback){
             //AA.AfId->AA.AuId
-            log.debug("start to Search Path AA.AfId->AA.AuId");
+            //log.debug("start to Search Path AA.AfId->AA.AuId");
             if(reqDetail.desc[1]=="AA.AuId")
             {
                 //request param
@@ -47,7 +48,7 @@ function searchPath(reqInfo, reqDetail, result, basePath, cbFunc) {
         },
         function(callback) {
             // AA.AfId->AA.AuId->Id
-            log.debug("start to Search Path AA.AfId->AA.AuId->Id");
+            //log.debug("start to Search Path AA.AfId->AA.AuId->Id");
             if(reqDetail.desc[1]=="Id")
             {
                 var expr = "Id="+reqDetail.value[1];
@@ -162,7 +163,7 @@ function handle_3_hop_result(url, reqInfo, basePath, result, reqDetail, callback
                 async.each(orExpr, function(expr, next){
                     //make url
                     var url = magUrlMake(expr, attributes, count);
-                    log.debug("send request:"+url);
+                    //log.debug("send request:"+url);
                     if(url){
                         handle_AfId(url, reqInfo, item, resultAuId, result, reqDetail, next);
                     }
@@ -186,26 +187,26 @@ function handle_3_hop_result(url, reqInfo, basePath, result, reqDetail, callback
     });   
 }
 
-function generateOrReq(AuIds, AfId)
-{
-    var baseUrl = "http://oxfordhk.azure-api.net/academic/v1.0/evaluate?";
-    var magKey = "&subscription-key=f7cc29509a8443c5b3a5e56b0e38b5a6";
-    var SPACE = 2048 - baseUrl.length - magKey.length - 100;
-    var result = [];
+// function generateOrReq(AuIds, AfId)
+// {
+//     var baseUrl = "http://oxfordhk.azure-api.net/academic/v1.0/evaluate?";
+//     var magKey = "&subscription-key=f7cc29509a8443c5b3a5e56b0e38b5a6";
+//     var SPACE = 2048 - baseUrl.length - magKey.length - 100;
+//     var result = [];
 
-    var expr = 'Composite(And(AA.AfId='+AfId+',AA.AuId='+AuIds[0]+'))';
-    for (var i = 1; i < AuIds.length; i++) {
-        if (expr.length + 50 < SPACE) {
-            expr = 'Or(' + expr + ',';
-            expr += 'Composite(And(AA.AfId=' + AfId + ',AA.AuId=' + AuIds[i] + ')))';
-        } else {
-            results.push(expr);
-            expr += 'Composite(And(AA.AfId=' + AfId + ',AA.AuId=' + AuIds[i] + '))';
-        }
-    }
-    result.push(expr);
-    return result;
-}
+//     var expr = 'Composite(And(AA.AfId='+AfId+',AA.AuId='+AuIds[0]+'))';
+//     for (var i = 1; i < AuIds.length; i++) {
+//         if (expr.length + 50 < SPACE) {
+//             expr = 'Or(' + expr + ',';
+//             expr += 'Composite(And(AA.AfId=' + AfId + ',AA.AuId=' + AuIds[i] + ')))';
+//         } else {
+//             results.push(expr);
+//             expr += 'Composite(And(AA.AfId=' + AfId + ',AA.AuId=' + AuIds[i] + '))';
+//         }
+//     }
+//     result.push(expr);
+//     return result;
+// }
 
 function handle_AfId(url, reqInfo, AfId, AuIds, result, reqDetail, callback)
 {
@@ -229,7 +230,7 @@ function handle_AfId(url, reqInfo, AfId, AuIds, result, reqDetail, callback)
                         if(AA[j].AuId in AuIdsTable && !(AA[j].AuId in tempTable)){
                             //found a path
                             var path = [reqDetail.value[0], AfId, AA[j].AuId, reqDetail.value[1]];
-                            log.debug("AA.AfId->AA.AuId->Id found a path!!");
+                            //log.debug("AA.AfId->AA.AuId->Id found a path!!");
                             result.push(path);
                             tempTable[AA[j].AuId] = 1;
                         }

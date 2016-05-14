@@ -26,7 +26,7 @@ function searchPath(reqInfo, reqDetail, result, basePath, cbFunc) {
         function(callback) {
             // C.CId->Id->AA.AuId
             if(reqDetail.desc[1]=="AA.AuId"){
-                log.debug("start to Search Path C.CId->Id->AA.AuId");
+                //log.debug("start to Search Path C.CId->Id->AA.AuId");
 
                 var expr = "Composite(AA.AuId="+reqDetail.value[1]+")";
                 var attributes = "F.FId,C.CId,AA.AuId,AA.AfId,J.JId,Id,RId";
@@ -37,7 +37,7 @@ function searchPath(reqInfo, reqDetail, result, basePath, cbFunc) {
 
                 //send request
                 if(url){
-                    log.debug("C.CId->Id->AA.AuId send request:"+url);
+                    //log.debug("C.CId->Id->AA.AuId send request:"+url);
                     handle_3_hop_result(url, reqInfo, basePath[0], result, reqDetail, callback);
                 }
                 else{
@@ -53,7 +53,7 @@ function searchPath(reqInfo, reqDetail, result, basePath, cbFunc) {
             // F.FId->Id->Id
             if(reqDetail.desc[1]=="Id")
             {
-                log.debug("start to Search Path C.CId->Id->Id");
+                //log.debug("start to Search Path C.CId->Id->Id");
                 var expr = "Id="+reqDetail.value[1];
                 var attributes = "F.FId,C.CId,AA.AuId,J.JId,CC";
                 var count = 1;
@@ -93,7 +93,7 @@ function searchPath(reqInfo, reqDetail, result, basePath, cbFunc) {
 
                             //send request
                             if(url){
-                                log.debug("C.CId->Id->Id send Or request:"+url);
+                                //log.debug("C.CId->Id->Id send Or request:"+url);
                                 handle_3_hop_result(url, reqInfo, basePath[0], result, reqDetail, callback);
                             }
                             else{
