@@ -29,12 +29,6 @@ function makeUrls(id1, id2) {
                 'AA.AuId,AA.AfId,J.JId,C.CId,F.FId,RId,Id',
                 10000),
             'mapUrl': [
-                // for 1-hop AA.AuId field
-                mapUrlMake(
-                    'Composite(AA.AuId=' + id1 + ')', 
-                    'Id,AA.AuId,AA.AfId', 
-                    10000
-                ),
                 mapUrlMake(
                     'Composite(AA.AuId=' + id1 + ')',
                     'AA.AuId,J.JId,C.CId,F.FId,RId,Id',

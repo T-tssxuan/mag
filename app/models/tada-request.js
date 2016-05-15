@@ -22,7 +22,7 @@ var tadaRequest = function (url, info, callback, maxTry, wait) {
         return callback(null, info.urlCache.getUrl(url));
     }
 
-    var tryTime = maxTry || 1000;
+    var tryTime = maxTry || 100;
     log.info('processing: ' + processing + ' MAXRequest: ' + MAXRequest + 
              ' queue len: ' + queue.length);
 
