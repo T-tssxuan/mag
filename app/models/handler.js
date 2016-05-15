@@ -44,9 +44,19 @@ function Handler(defaultDelay, id1, id2, res, cache) {
         urlCache: cache
     }
 
+    // the express respond handler
+    this.res = res;
+
+    // the path search result
+    this.result = [];
+
     // TODO if not a number return immediately
     this.id1 = Number(id1);
     this.id2 = Number(id2);
+    if (Number.isNaN(this.id1) || Number.isNaN(this.id2)) {
+        this.invalid = true;
+        return;
+    }
 
     // request detail infomation, which need query the mag api
     this.reqDetail = {
@@ -57,12 +67,6 @@ function Handler(defaultDelay, id1, id2, res, cache) {
         // the value of the tow query pair
         'value': [0, 0]
     };
-
-    // the express respond handler
-    this.res = res;
-
-    // the path search result
-    this.result = [];
 
     preRequest(this.id1, this.id2, this.reqInfo.urlCache);
 }
@@ -310,6 +314,11 @@ Handler.prototype.sendResult = function() {
  * start the handler
  */
 Handler.prototype.start = function() {
+    if (this.invalid) {
+        log.info('send result for invalid request');
+        this.sendResult();
+        return;
+    }
     log.info('start the Handler for id1: ' + this.id1 + ' id2: ' + this.id2);
     this.getRequestDetail();
 }
