@@ -32,7 +32,7 @@ delayChecker.start = function() {
             var elapse = Date.now() - begin;
             that.values[that.pos] = elapse;
             that.pos = (that.pos + 1) % that.values.length;
-            log.debug("Current delay: " + elapse + ' state: ' + res.statusCode);
+            log.debug("Current delay: " + elapse);
         });
     }
 
