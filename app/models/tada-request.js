@@ -23,8 +23,8 @@ var tadaRequest = function (url, info, callback, maxTry, wait) {
     }
 
     var tryTime = maxTry || 100;
-    log.info('processing: ' + processing + ' MAXRequest: ' + MAXRequest + 
-             ' queue len: ' + queue.length);
+//     log.info('processing: ' + processing + ' MAXRequest: ' + MAXRequest + 
+//              ' queue len: ' + queue.length);
 
     if (processing >= MAXRequest) {
         queue.push([url, info, callback, maxTry, wait]);
@@ -56,7 +56,6 @@ var tadaRequest = function (url, info, callback, maxTry, wait) {
             }
             info.timeout = elapse * 1.7;
             log.debug('url: ' + url)
-            // console.log(JSON.stringify(data));
             callback(err, data);
         } else {
             log.warn('info timeout: ' + info.timeout);

@@ -3,13 +3,12 @@ function Cache(urlSize, interval) {
     this.urlIndex = new Array(this.urlSize);
     this.urlPos = 0;
     this.urlCache = {};
-    this.interval = interval || 10000;
+    this.interval = interval || 40000;
 }
 
 Cache.prototype.resetClearData = function() {
     clearTimeout(this.timer);
     this.timer = setTimeout(function(that) {
-        console.log('clear data');
         that.urlIndex = new Array(this.urlSize);
         that.urlCache = {};
         that.urlPos = 0;
