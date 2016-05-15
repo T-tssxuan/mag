@@ -60,7 +60,7 @@ var tadaRequest = function (url, info, callback, maxTry, wait) {
         } else {
             log.warn('info timeout: ' + info.timeout);
             log.error('retry: ' + tryTime + ' ' + url);
-            info.timeout = elapse * 2;
+            info.timeout = elapse * 2.2;
             // if failed retry
             if (info.flag && tryTime > 1) {
                 tadaRequest(url, info, callback, --tryTime, wait);
