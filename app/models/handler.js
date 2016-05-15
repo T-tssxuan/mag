@@ -39,9 +39,11 @@ function Handler(defaultDelay, id1, id2, res, cache) {
     this.reqInfo = {
         receivedCount: 0,
         timeoutCount: 0,
-        timeout: defaultDelay * 2,
+        timeout: defaultDelay,
         flag: true,
-        urlCache: cache
+        urlCache: cache,
+        varD: defaultDelay,
+        varRTT: defaultDelay / 4
     }
 
     // the express respond handler

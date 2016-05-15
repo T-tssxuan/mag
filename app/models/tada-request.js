@@ -37,6 +37,12 @@ var tadaRequest = function (url, info, callback, maxTry, wait) {
     request.get(url, {timeout: timeout}, function (error, response, body) {
         processing--;
         var elapse = Date.now() - beginTime;
+        info.varRTT = 0.875 * info.varRTT + 0.125 * elapse;
+        log.info('varRTT: ' + info.varRTT);
+        log.info('varD: ' + info.varD);
+        info.varD = 0.875 * info.varD + 0.125 * Math.abs(info.varRTT - elapse);
+        info.timeout = info.varRTT + 4 * info.varD;
+        log.warn('timeout value: ' + info.timeout + 'ms');
         log.info('request time: ' + elapse + 'ms');
         if (!error && response.statusCode == 200) {
             // if successed parse the data and invoke the callback function
@@ -54,14 +60,14 @@ var tadaRequest = function (url, info, callback, maxTry, wait) {
             } catch(e) {
                 err = e;
             }
-            info.timeout = elapse * 1.7;
+            // info.timeout = elapse * 1.7;
             log.debug('url: ' + url)
             // console.log(JSON.stringify(data));
             callback(err, data);
         } else {
             log.warn('info timeout: ' + info.timeout);
             log.error('retry: ' + tryTime + ' ' + url);
-            info.timeout = elapse * 2;
+            // info.timeout = elapse * 2;
             // if failed retry
             if (info.flag && tryTime > 1) {
                 tadaRequest(url, info, callback, --tryTime, wait);
