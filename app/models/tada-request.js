@@ -37,6 +37,7 @@ var tadaRequest = function (url, info, callback, maxTry, wait) {
     request.get(url, {timeout: timeout}, function (error, response, body) {
         processing--;
         var elapse = Date.now() - beginTime;
+        log.info('request time: ' + elapse);
         if (!error && response.statusCode == 200) {
             // if successed parse the data and invoke the callback function
             if (queue.length > 0) {
