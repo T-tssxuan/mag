@@ -1,4 +1,4 @@
 #!/bin/bash
-until `node app > log`; do
+until `node app`; do
     echo 'the node down'
 done
