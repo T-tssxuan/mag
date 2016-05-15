@@ -41,9 +41,7 @@ function Handler(defaultDelay, id1, id2, res, cache) {
         timeoutCount: 0,
         timeout: defaultDelay,
         flag: true,
-        urlCache: cache,
-        varD: defaultDelay,
-        varRTT: defaultDelay / 4
+        urlCache: cache
     }
 
     // the express respond handler
